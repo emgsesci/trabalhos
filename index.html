@@ -16,7 +16,7 @@
     --bg:#f5f4f2; --card:#ffffff; --ink:#26292c; --ink-2:#585e65; --ink-3:#8a9097;
     --line:#e4e2df; --line-2:#efedea; --red:#b3121b; --red-dark:#7d0c12; --red-soft:#fbeaea; --red-line:#e9b9bc;
     --orange:#e2580c; --amber:#f2a516; --char:#1e2124;
-    --p1:#c1121f; --p1-bg:#fdeced; --p2:#e2580c; --p2-bg:#fff1e7; --p3:#5f8bab; --p3-bg:#eef4f8; --p4:#245d8a; --p4-bg:#e5eff7;
+    --p1:#c1121f; --p1-bg:#fdeced; --p2:#e2580c; --p2-bg:#fff1e7; --p3:#5f8bab; --p3-bg:#eef4f8; --p4:#3d8a5a; --p4-bg:#e9f5ed; --blue-bg:#e5eff7;
     --edit:#fbfcfd; --edit-line:#cfd5db; --ok:#2f7d4f; --ok-soft:#e8f3ec; --warn:#8a5a00; --warn-soft:#fff5e0;
     --surface-2:#fcfcfd; --surface-3:#fafafa; --thead:#f7f8f9; --track:rgba(0,0,0,.06);
     --neutral-bg:#f0f0f0; --neutral-fg:#6b7076; --blue-fg:#245d8a; --ok-fg:#25683f; --amber-soft:#fff2d9; --amber-fg:#8a5200;
@@ -32,7 +32,7 @@
     --bg:#14171a; --card:#1d2125; --ink:#e6e8ea; --ink-2:#b2b8be; --ink-3:#858c93;
     --line:#353b41; --line-2:#2a2f34; --red:#e2464f; --red-dark:#b3121b; --red-soft:#3a1d21; --red-line:#6e2b31;
     --orange:#f07a36; --amber:#f2a516; --char:#0d0f11;
-    --p1:#ef4f5a; --p1-bg:#311a1d; --p2:#f0803f; --p2-bg:#33231a; --p3:#82abc8; --p3-bg:#1c2830; --p4:#5d9dd2; --p4-bg:#162533;
+    --p1:#ef4f5a; --p1-bg:#311a1d; --p2:#f0803f; --p2-bg:#33231a; --p3:#82abc8; --p3-bg:#1c2830; --p4:#6cc290; --p4-bg:#16291e; --blue-bg:#162533;
     --edit:#23282d; --edit-line:#3f464d; --ok:#5fc98c; --ok-soft:#1b3125; --warn:#e8b04a; --warn-soft:#352b15;
     --surface-2:#21262a; --surface-3:#24292e; --thead:#252a2f; --track:rgba(255,255,255,.09);
     --neutral-bg:#2c3136; --neutral-fg:#a8afb5; --blue-fg:#8ec1ea; --ok-fg:#80d6a3; --amber-soft:#3a2d12; --amber-fg:#f0be62;
@@ -122,7 +122,7 @@
   details.exp .menu small{display:block;color:var(--ink-3);font-size:11.5px}
   #report{display:none}
 
-  .newra{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:8px;background:var(--p4-bg);color:var(--blue-fg);vertical-align:1px}
+  .newra{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:8px;background:var(--blue-bg);color:var(--blue-fg);vertical-align:1px}
   #matrix tr.pending td{background:var(--surface-3)}
   #matrix tr.pending td.sticky{background:var(--surface-3);color:var(--ink-2)}
   .rk tr.pend td{background:var(--surface-3);color:var(--ink-3)}
@@ -175,10 +175,16 @@
   .ahp-sum .tag{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:10px;margin-left:6px}
   .tag.man{background:var(--warn-soft);color:var(--warn)} .tag.ok{background:var(--ok-soft);color:var(--ok)}
   .ahp-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .lgroup{position:relative;display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+  .lgroup:hover{border-color:var(--ink-3)}
+  .lgroup > button.sm{border:0;background:none;padding-right:5px}
+  .lgroup .helpwrap{position:static;padding-right:8px}
+  .help.lt{width:16px;height:16px;min-height:0;padding:0;border-radius:50%;font-size:10px;font-weight:600;line-height:1;display:grid;place-items:center;background:none;border:1px solid var(--line);color:var(--ink-3);cursor:help}
+  .help.lt:hover,.help.lt:focus-visible{border-color:var(--ink-2);color:var(--ink)}
   .ahp table{margin-top:10px;font-size:12.5px}
   .ahp table td,.ahp table th{padding:5px 8px}
   .src{font-size:11px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--line-2);color:var(--ink-2)}
-  .src.imp{background:var(--p4-bg);color:var(--blue-fg)}
+  .src.imp{background:var(--blue-bg);color:var(--blue-fg)}
   .ahp-tbl tr.off td{color:var(--ink-3)} .ahp-tbl tr.off .src{opacity:.6}
   .ahp-tbl tr.grp td{border-top:1px solid var(--line);background:var(--surface-3)}
   .ahp-tbl input[type=checkbox]{width:17px;height:17px;accent-color:var(--red);cursor:pointer;vertical-align:middle}
@@ -222,7 +228,7 @@
   .ob td.ra{font-weight:500;white-space:nowrap}
   .st{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:12px;white-space:nowrap}
   .st.s1{background:var(--ok-soft);color:var(--ok-fg)} .st.s2{background:var(--amber-soft);color:var(--amber-fg)} .st.s3{background:var(--violet-soft);color:var(--violet-fg)}
-  .st.s4{background:var(--p4-bg);color:var(--blue-fg)} .st.s5{background:var(--neutral-bg);color:var(--neutral-fg)}
+  .st.s4{background:var(--blue-bg);color:var(--blue-fg)} .st.s5{background:var(--neutral-bg);color:var(--neutral-fg)}
   .rd{font-size:12.5px;font-weight:600;white-space:nowrap} .rd.ok{color:var(--ok)} .rd.gap{color:var(--red)} .rd.ref{color:var(--amber-fg)} .rd.na{color:var(--ink-3);font-weight:400}
 
   /* Autoria */
@@ -439,7 +445,15 @@
         <span class="ahp-sum" id="ahpSum"></span>
       </div>
       <div class="ahp-actions">
-        <button type="button" class="sm" id="btnApplyAhp">Reaplicar pesos do AHP</button>
+        <span class="lgroup">
+          <button type="button" class="sm" id="btnApplyAhp">Reaplicar pesos do AHP</button>
+          <span class="helpwrap"><button type="button" class="help lt" id="btnApplyHelp" aria-label="O que faz Reaplicar pesos do AHP" aria-describedby="btnApplyHelpTip">?</button>
+            <span class="tip" role="tooltip" id="btnApplyHelpTip"><b>Reaplicar pesos do AHP</b>
+              <span>Devolve aos controles os pesos calculados pelo AHP com as respostas marcadas no cálculo: média geométrica das matrizes dos especialistas, arredondada a números inteiros que somam 100%.</span>
+              <span>Use depois de ajustar pesos à mão, para voltar ao cenário dos especialistas. O botão fica desativado quando os pesos atuais já são os do AHP; os dados da matriz não são alterados.</span>
+            </span>
+          </span>
+        </span>
         <button type="button" class="sm" id="btnAhpToggle" aria-expanded="false" aria-controls="ahpList">Mostrar respostas</button>
       </div>
     </div>
@@ -1404,7 +1418,7 @@ var BANDS = [
   {n:"Muito alta", c:"#c1121f", bg:"#fdeced", grad:["#e2580c","#c1121f"]},
   {n:"Alta",       c:"#e2580c", bg:"#fff1e7", grad:["#f2a516","#e2580c"]},
   {n:"Moderada",   c:"#5f8bab", bg:"#eef4f8", grad:["#5f8bab","#5f8bab"]},
-  {n:"Baixa",      c:"#245d8a", bg:"#e5eff7", grad:["#245d8a","#245d8a"]}
+  {n:"Baixa",      c:"#3d8a5a", bg:"#e9f5ed", grad:["#3d8a5a","#3d8a5a"]}
 ];
 function stamp(){
   var d = new Date(), p = function(n){ return (n<10?"0":"")+n; };
@@ -1670,7 +1684,7 @@ function reportPDF(){
 
   var R = lastRes.ranking, ex = selExperts(), gAhp = groupAhp(), byRa = {};
   state.rows.forEach(function(r){ byRa[r.ra] = r; });
-  var d = decimalsFor(R), BANDC = [["#fdeced","#c1121f"],["#fff1e7","#b84a0a"],["#eef4f8","#3f6a88"],["#e5eff7","#245d8a"]];
+  var d = decimalsFor(R), BANDC = [["#fdeced","#c1121f"],["#fff1e7","#b84a0a"],["#eef4f8","#3f6a88"],["#e9f5ed","#2f6e47"]];
   var FONTE = "Fonte: elaboração própria, com base em dados do CBMDF (GESINT; Matriz Operacional, BG nº 023/2026), do IPEDF (PDAD 2024) e do IBGE (Censo 2022).";
 
   newPage();
