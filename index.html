@@ -77,12 +77,11 @@
   /* Pesos */
   .weights{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
   .w{border:1px solid var(--line-2);border-radius:8px;padding:12px;background:var(--surface-2)}
-  .w-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .w-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .w label{font-weight:600;font-size:13px}
-  .w .val{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--ink)}
-  .w .eff{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:7px 10px;border-radius:8px;background:var(--red-soft);border:1px solid var(--red-line)}
-  .w .eff span{font-size:11.5px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
-  .w .eff b{font-family:var(--mono);color:var(--red);font-weight:700;font-size:18px;line-height:1}
+  .w .val{font-family:var(--mono);font-size:30px;font-weight:700;line-height:1;color:var(--red);background:var(--red-soft);border:1px solid var(--red-line);border-radius:8px;padding:5px 9px;flex:none}
+  .w .eff{font-size:12px;color:var(--ink-2);margin-top:2px}
+  .w .eff b{font-family:var(--mono);color:var(--ink);font-weight:600}
   input[type=range]{width:100%;margin:10px 0 2px;accent-color:var(--red);height:28px;cursor:pointer;touch-action:pan-y}
   .scale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3)}
   .mode{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin-top:10px}
@@ -739,7 +738,7 @@ CRIT.forEach(function(c){
     '<div class="rwrap"><input type="range" id="'+id+'" min="0" max="100" step="1" aria-describedby="'+id+'_e">'+
     '<div class="scale"><span>0%</span><span>50%</span><span>100%</span></div></div>'+
     '<button type="button" class="step" data-d="1" aria-label="Aumentar '+c.label+' em 1 ponto">+</button></div>'+
-    '<div class="eff" id="'+id+'_e"><span>Peso em uso no cálculo</span><b>–</b></div>';
+    '<div class="eff" id="'+id+'_e">Peso efetivo: <b>–</b></div>';
   if (c.key === "gbm"){
     d.innerHTML +=
       '<div class="moderow"><div class="mode" role="group" aria-label="Modo do critério GBM">'+
