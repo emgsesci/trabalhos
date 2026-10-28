@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<!--
+  Painel de priorização de RAs para novos GBMs.
+  Produto do TCC do Cap. QOBM/Comb. Matheus Castro de Carvalho (CAO/10, CBMDF, 2026):
+  "Subsídios para o plano de expansão do CBMDF: um modelo multicritério para priorização de
+  novas unidades operacionais no Distrito Federal". Uso e adaptação livres no CBMDF,
+  mantida a referência ao trabalho de origem.
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Priorização de GBMs</title>
+<style>
+  :root{
+    --bg:#f5f4f2; --card:#ffffff; --ink:#26292c; --ink-2:#585e65; --ink-3:#8a9097;
+    --line:#e4e2df; --line-2:#efedea; --red:#b3121b; --red-dark:#7d0c12; --red-soft:#fbeaea; --red-line:#e9b9bc;
+    --orange:#e2580c; --amber:#f2a516; --char:#1e2124;
+    --p1:#c1121f; --p1-bg:#fdeced; --p2:#e2580c; --p2-bg:#fff1e7; --p3:#5f8bab; --p3-bg:#eef4f8; --p4:#245d8a; --p4-bg:#e5eff7;
+    --edit:#fbfcfd; --edit-line:#cfd5db; --ok:#2f7d4f; --ok-soft:#e8f3ec; --warn:#8a5a00; --warn-soft:#fff5e0;
+    --radius:10px;
+    --font:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45;-webkit-text-size-adjust:100%}
+  .wrap{max-width:1380px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+  header.top{position:relative;z-index:10;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between;
+    background:var(--char);color:#fff;border-radius:var(--radius);padding:20px 22px 24px;margin-bottom:18px}
+  header.top .deco{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none}
+  header.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;border-radius:0 0 var(--radius) var(--radius);
+    background:repeating-linear-gradient(-45deg,var(--red) 0 14px,var(--amber) 14px 28px)}
+  header.top .chev{position:absolute;right:-30px;top:-20px;width:300px;height:180px;opacity:.07;pointer-events:none}
+  header.top .brand{display:flex;gap:14px;align-items:center;position:relative}
+  header.top .flame{width:46px;height:46px;flex:none}
+  header.top .kicker{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);font-weight:600}
+  header.top h1{margin:2px 0 4px;font-size:22px;font-weight:650;letter-spacing:-.01em}
+  header.top p{margin:0;color:#c9ccd0;max-width:760px}
+  .utils{display:flex;gap:8px;flex-wrap:wrap;position:relative}
+  header.top .utils button{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);color:#fff}
+  header.top .utils button:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.4)}
+  header.top .utils button.danger-armed{background:var(--red);border-color:var(--red)}
+  .card h2 .ico{width:18px;height:18px;vertical-align:-3px;margin-right:7px;color:var(--red)}
+  .w .ci{width:30px;height:30px;border-radius:8px;display:inline-grid;place-items:center;background:var(--red-soft);color:var(--red);margin-right:8px;flex:none}
+  .w .ci svg{width:17px;height:17px}
+  .w-top .lab{display:flex;align-items:center}
+  button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 12px;min-height:36px}
+  button:hover{border-color:var(--ink-3)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  button.danger-armed{background:var(--red);border-color:var(--red);color:#fff}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .card h2{margin:0;font-size:15px;font-weight:650}
+  .card .sub{margin:2px 0 0;color:var(--ink-2);font-size:13px}
+  .card-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px 16px;margin-bottom:12px}
+
+  /* Pesos */
+  .weights{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .w{border:1px solid var(--line-2);border-radius:8px;padding:12px;background:#fcfcfd}
+  .w-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .w label{font-weight:600;font-size:13px}
+  .w .val{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--ink)}
+  .w .eff{font-size:12px;color:var(--ink-2);margin-top:2px}
+  .w .eff b{font-family:var(--mono);color:var(--red);font-weight:600}
+  input[type=range]{width:100%;margin:10px 0 2px;accent-color:var(--red);height:28px;cursor:pointer;touch-action:pan-y}
+  .scale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3)}
+  .mode{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin-top:10px}
+  .mode button{border:0;border-radius:0;min-height:28px;padding:4px 10px;font-size:12px;background:#fff;color:var(--ink-2)}
+  .mode button[aria-pressed=true]{background:var(--red);color:#fff}
+  .w{border-top:3px solid var(--red)}
+  .moderow{position:relative;display:flex;align-items:center;gap:8px;margin-top:10px}
+  .moderow .mode{margin-top:0}
+  .w .help.lt{width:16px;height:16px;min-height:0;padding:0;border-radius:50%;font-size:10px;font-weight:600;line-height:1;display:grid;place-items:center;background:none;border:1px solid var(--line);color:var(--ink-3);cursor:help}
+  .w .help.lt:hover,.w .help.lt:focus-visible{border-color:var(--ink-2);color:var(--ink)}
+  .moderow .helpwrap{position:static;padding-right:0}
+  .moderow .tip::before{left:194px}
+  .mode-hint{font-size:11.5px;color:var(--ink-3);margin-top:6px}
+  .sumline{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:13px;color:var(--ink-2)}
+  .sumline b{font-family:var(--mono);color:var(--ink)}
+  .budget{display:inline-flex;align-items:center;gap:8px}
+  .bmeter{display:inline-block;width:120px;height:8px;border-radius:4px;background:var(--line-2);overflow:hidden}
+  .bmeter i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--red));transition:width .15s}
+  .wnote{color:var(--ink-3);font-size:12px}
+  .rwrap{position:relative;flex:1;min-width:0}
+  .srow{display:flex;align-items:flex-start;gap:8px;margin-top:6px}
+  .step{flex:none;width:32px;height:32px;min-height:0;padding:0;margin-top:8px;border-radius:50%;border:1px solid var(--red-line);background:#fff;color:var(--red);font-size:18px;font-weight:600;line-height:1;display:grid;place-items:center;touch-action:manipulation;user-select:none}
+  .step:hover:not(:disabled){background:var(--red-soft);border-color:var(--red)}
+  .step:active:not(:disabled){background:var(--red);color:#fff}
+  .step:disabled{opacity:.35;cursor:not-allowed;border-color:var(--line);color:var(--ink-3)}
+  .w.capped{animation:capflash .5s}
+  @keyframes capflash{0%,100%{box-shadow:none}40%{box-shadow:0 0 0 3px var(--amber)}}
+
+  /* Menu de exportação */
+  details.exp{position:relative}
+  details.exp summary{list-style:none;cursor:pointer;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:var(--red);color:#fff;padding:8px 14px;min-height:36px;display:flex;align-items:center;gap:8px;font-weight:500}
+  details.exp summary::-webkit-details-marker{display:none}
+  details.exp summary:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  details.exp .menu{position:absolute;right:0;top:calc(100% + 8px);z-index:50;max-width:calc(100vw - 32px);background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;min-width:290px}
+  details.exp .menu h3{margin:6px 10px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  details.exp .menu button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--ink);padding:8px 10px;border-radius:7px;min-height:0}
+  details.exp .menu button:hover{background:var(--red-soft)}
+  details.exp .menu small{display:block;color:var(--ink-3);font-size:11.5px}
+  #report{display:none}
+
+  .newra{display:inline-block;margin-left:6px;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:8px;background:#e5eff7;color:#245d8a;vertical-align:1px}
+  #matrix tr.pending td{background:#fafafa}
+  #matrix tr.pending td.sticky{background:#fafafa;color:var(--ink-2)}
+  .rk tr.pend td{background:#fafafa;color:var(--ink-3)}
+  .alert.info{background:#eef4f8;border-color:#c9dbe8;color:#24435c}
+  /* Ajuda da importação */
+  .impgroup{position:relative;display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.08)}
+  .impgroup:hover{border-color:rgba(255,255,255,.4)}
+  .impgroup.red{background:var(--red);border-color:var(--red)}
+  .impgroup.red:hover{border-color:#e04a52}
+  .impgroup.red details.exp summary{border:0;background:none;padding-right:6px}
+  .impgroup.red .help{border-color:rgba(255,255,255,.5)!important;color:rgba(255,255,255,.75)!important}
+  .impgroup.red .help:hover,.impgroup.red .help:focus-visible{border-color:#fff!important;color:#fff!important}
+  .impgroup button.danger-armed{border-radius:8px 0 0 8px}
+  header.top .utils .impgroup button.imp{border:0;background:none;padding-right:6px}
+  header.top .utils .impgroup button.imp:hover{background:none}
+  .helpwrap{display:inline-flex;align-items:center;padding-right:9px}
+  header.top .utils button.help{width:16px;height:16px;min-height:0;padding:0;border-radius:50%;font-size:10px;font-weight:600;line-height:1;display:grid;place-items:center;
+    background:none;border:1px solid rgba(255,255,255,.35);color:rgba(255,255,255,.6);cursor:help}
+  header.top .utils button.help:hover,header.top .utils button.help:focus-visible{border-color:rgba(255,255,255,.8);color:#fff;background:none}
+  .tip{position:absolute;top:calc(100% + 10px);left:0;z-index:60;width:360px;max-width:calc(100vw - 32px);
+    background:var(--card);color:var(--ink);border:1px solid var(--line);border-top:3px solid var(--amber);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.22);
+    padding:12px 14px;font-size:12.5px;line-height:1.5;display:none;flex-direction:column;gap:6px;text-align:left;white-space:normal}
+  .tip::before{content:"";position:absolute;top:-9px;left:24px;border:6px solid transparent;border-bottom-color:var(--amber)}
+  .tip b{font-size:13px}
+  .tip::after{content:"";position:absolute;left:0;right:0;top:-12px;height:12px}
+  .tip-link{border-top:1px solid var(--line-2);padding-top:7px;margin-top:2px}
+  .tip-link b{font-size:12.5px}
+  .tip a{color:var(--red);font-weight:600;word-break:break-all}
+  .tip a:hover{color:var(--red-dark)}
+  .helpwrap:hover .tip,.helpwrap:focus-within .tip{display:flex}
+  .impgroup .helpwrap{position:static}
+  @media (max-width:760px){.tip{position:fixed;top:auto;left:max(16px, env(safe-area-inset-left, 0px));right:max(16px, env(safe-area-inset-right, 0px));width:auto;max-width:none;transform:none;margin-top:10px}.tip::before{display:none}}
+  /* Importação / AHP */
+  header.top .utils button.imp{display:inline-flex;align-items:center;gap:7px}
+  button.sm{min-height:30px;padding:4px 10px;font-size:12.5px}
+  button.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+  button.primary:hover{background:var(--red-dark);border-color:var(--red-dark)}
+  button.primary:disabled{opacity:.45;cursor:not-allowed}
+  button.link{border:0;background:none;color:var(--red);padding:2px 4px;min-height:0;font-size:12.5px;text-decoration:underline}
+  .ahp{margin-top:12px;border:1px dashed var(--line);border-radius:8px;padding:10px 12px;background:#fcfbfa}
+  .ahp-head{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:center;font-size:13px}
+  .ahp-sum{color:var(--ink-2);margin-left:6px}
+  .ahp-sum .tag{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:10px;margin-left:6px}
+  .tag.man{background:var(--warn-soft);color:var(--warn)} .tag.ok{background:var(--ok-soft);color:var(--ok)}
+  .ahp-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .ahp table{margin-top:10px;font-size:12.5px}
+  .ahp table td,.ahp table th{padding:5px 8px}
+  .src{font-size:11px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--line-2);color:var(--ink-2)}
+  .src.imp{background:#e5eff7;color:#245d8a}
+  .ahp-tbl tr.off td{color:var(--ink-3)} .ahp-tbl tr.off .src{opacity:.6}
+  .ahp-tbl tr.grp td{border-top:1px solid var(--line);background:#fafafa}
+  .ahp-tbl input[type=checkbox]{width:17px;height:17px;accent-color:var(--red);cursor:pointer;vertical-align:middle}
+  .del{width:26px;height:26px;min-height:0;padding:0;border-radius:50%;border:1px solid var(--red-line);color:var(--red);background:#fff;font-size:17px;line-height:1;display:grid;place-items:center}
+  .del:hover{background:var(--red);color:#fff;border-color:var(--red)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .modal{position:fixed;inset:0;z-index:100;background:rgba(20,22,24,.55);display:flex;align-items:flex-start;justify-content:center;padding:calc(40px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));overflow:auto}
+  .modal[hidden]{display:none}
+  .modal-card{background:#fff;border-radius:12px;max-width:980px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);border-top:5px solid var(--red)}
+  .modal-head{display:flex;justify-content:space-between;gap:12px;padding:16px 18px 6px}
+  .modal-head h2{margin:0;font-size:17px}
+  .modal .x{border:0;font-size:24px;line-height:1;width:36px;height:36px;padding:0;color:var(--ink-2)}
+  #impBody{padding:6px 18px 4px}
+  .modal-foot{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:12px 18px 16px;border-top:1px solid var(--line-2);margin-top:10px}
+  .utils2{display:flex;gap:8px}
+  .imp-tbl td,.imp-tbl th{padding:6px 8px;font-size:12.5px}
+  .imp-tbl td{white-space:nowrap}
+  .imp-tbl tr.dis td{color:var(--ink-3)}
+  .badge{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:10px}
+  .badge.new{background:#e3f1e8;color:#25683f} .badge.dup{background:#f0f0f0;color:#6b7076} .badge.err{background:var(--red-soft);color:var(--red)} .badge.fix{background:var(--warn-soft);color:var(--warn)}
+  .cmp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+  .cmp div{border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--ink-2)}
+  .cmp b{display:block;font-family:var(--mono);font-size:15px;color:var(--ink);margin-top:2px}
+  .cmp .up{color:var(--ok)} .cmp .down{color:var(--red)}
+  .imp-note{font-size:12px;color:var(--ink-2);margin:10px 0 0;line-height:1.5}
+  @media (max-width:700px){.cmp{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  /* Plano de Obras */
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+  .kpi{border:1px solid var(--line-2);border-radius:8px;padding:10px 12px;background:#fcfcfd}
+  .kpi .k{font-size:12px;color:var(--ink-2)}
+  .kpi .v{font-family:var(--mono);font-size:22px;font-weight:650;margin-top:2px}
+  .kpi .v small{font-size:13px;color:var(--ink-3);font-weight:500}
+  .kpi.hl{border-color:var(--red-line);background:var(--red-soft)} .kpi.hl .v{color:var(--red)}
+  .ob td{white-space:normal;vertical-align:middle}
+  .ob td.pos{font-family:var(--mono);font-weight:700;white-space:nowrap}
+  .ob tr.b1 td.pos{color:var(--p1);box-shadow:inset 4px 0 0 var(--p1)} .ob tr.b2 td.pos{color:var(--p2);box-shadow:inset 4px 0 0 var(--p2)}
+  .ob tr.b3 td.pos{color:var(--p3);box-shadow:inset 4px 0 0 var(--p3)} .ob tr.b4 td.pos{color:var(--p4);box-shadow:inset 4px 0 0 var(--p4)}
+  .ob td.det{color:var(--ink-2);font-size:13px;min-width:220px}
+  .ob td.ra{font-weight:500;white-space:nowrap}
+  .st{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:12px;white-space:nowrap}
+  .st.s1{background:#e3f1e8;color:#25683f} .st.s2{background:#fff2d9;color:#8a5200} .st.s3{background:#eeeaf7;color:#594a91}
+  .st.s4{background:#e5eff7;color:#245d8a} .st.s5{background:#f0f0f0;color:#6b7076}
+  .rd{font-size:12.5px;font-weight:600;white-space:nowrap} .rd.ok{color:var(--ok)} .rd.gap{color:var(--red)} .rd.ref{color:#8a5200} .rd.na{color:var(--ink-3);font-weight:400}
+
+  /* Autoria */
+  .credit{display:flex;gap:16px;align-items:flex-start;margin-top:16px;background:var(--char);color:#e6e7e9;border-radius:var(--radius);padding:18px 20px 20px;position:relative;overflow:hidden}
+  .credit::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:repeating-linear-gradient(-45deg,var(--red) 0 10px,var(--amber) 10px 20px)}
+  .credit-flame{width:34px;height:34px;flex:none;color:var(--amber);margin-left:4px}
+  .credit h2{margin:0 0 6px;font-size:15px;color:#fff}
+  .credit p{margin:6px 0;font-size:13px;line-height:1.55;color:#c9ccd0}
+  .credit b{color:#fff}
+  .credit .ref{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 12px}
+  @media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  .grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+
+  /* Tabelas */
+  .tbl-wrap{overflow:auto;max-height:640px;border:1px solid var(--line);border-radius:8px}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+  th,td{padding:6px 10px;border-bottom:1px solid var(--line-2);white-space:nowrap;text-align:right}
+  thead th{position:sticky;top:0;z-index:2;background:#f7f8f9;font-size:12px;font-weight:600;color:var(--ink-2);border-bottom:1px solid var(--line);vertical-align:bottom;white-space:normal;line-height:1.25}
+  th.l,td.l{text-align:left}
+  tbody tr:last-child td{border-bottom:0}
+  .sticky{position:sticky;left:0;z-index:1;background:var(--card)}
+  thead th.sticky{z-index:3;background:#f7f8f9}
+  #matrix td.sticky{font-weight:500;min-width:170px;box-shadow:1px 0 0 var(--line-2)}
+  #matrix td{padding:3px 6px}
+  #matrix input{width:100%;min-width:96px;font:inherit;font-family:var(--mono);font-size:13px;text-align:right;padding:6px 8px;border:1px solid var(--edit-line);border-radius:6px;background:var(--edit);color:var(--ink)}
+  #matrix input.gbm{min-width:64px}
+  #matrix input:hover{border-color:var(--ink-3)}
+  #matrix input.bad{border-color:var(--red);background:var(--red-soft)}
+  #matrix input.miss{border-color:#d9a400;background:var(--warn-soft)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink-2);margin-top:10px}
+  .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px;border:1px solid}
+  .sw.e{background:var(--edit);border-color:var(--edit-line)}
+  .sw.m{background:var(--warn-soft);border-color:#d9a400}
+  .sw.b{background:var(--red-soft);border-color:var(--red)}
+
+  .rk td.pos{font-family:var(--mono);font-weight:700;width:44px}
+  .rk td.ra{font-weight:500}
+  .idx{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .bar{flex:1;min-width:60px;max-width:150px;height:8px;background:rgba(0,0,0,.06);border-radius:4px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:4px}
+  .rk tr.p1 td{background:var(--p1-bg)} .rk tr.p1 td.pos{color:var(--p1);box-shadow:inset 4px 0 0 var(--p1)} .rk tr.p1 .bar i{background:linear-gradient(90deg,var(--orange),var(--p1))}
+  .rk tr.p2 td{background:var(--p2-bg)} .rk tr.p2 td.pos{color:var(--p2);box-shadow:inset 4px 0 0 var(--p2)} .rk tr.p2 .bar i{background:linear-gradient(90deg,var(--amber),var(--p2))}
+  .rk tr.p3 td{background:var(--p3-bg)} .rk tr.p3 td.pos{color:var(--p3);box-shadow:inset 4px 0 0 var(--p3)} .rk tr.p3 .bar i{background:var(--p3)}
+  .rk tr.p4 td{background:var(--p4-bg)} .rk tr.p4 td.pos{color:var(--p4);box-shadow:inset 4px 0 0 var(--p4)} .rk tr.p4 .bar i{background:var(--p4)}
+  .rk tr.p1 + tr.p2 td, .rk tr.p2 + tr.p3 td, .rk tr.p3 + tr.p4 td{border-top:2px solid #fff}
+  .plegend{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+  .plegend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px 3px 7px;border-radius:12px;font-weight:500}
+  .plegend i{width:9px;height:9px;border-radius:50%}
+  .plegend .l1{background:var(--p1-bg);color:var(--p1)} .plegend .l1 i{background:var(--p1)}
+  .plegend .l2{background:var(--p2-bg);color:#a8400a} .plegend .l2 i{background:var(--p2)}
+  .plegend .l3{background:var(--p3-bg);color:#3f6a88} .plegend .l3 i{background:var(--p3)}
+  .plegend .l4{background:var(--p4-bg);color:var(--p4)} .plegend .l4 i{background:var(--p4)}
+  .num{font-family:var(--mono)}
+  .delta{font-family:var(--mono);font-size:12px}
+  .up{color:var(--ok)} .down{color:var(--red)} .same{color:var(--ink-3)}
+  .chip{display:inline-block;font-size:11px;padding:1px 6px;border-radius:10px;background:var(--line-2);color:var(--ink-2);font-family:var(--mono)}
+  .chip.zero{background:var(--red-soft);color:var(--red)}
+
+  .alert{border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:12px;border:1px solid}
+  .alert.warn{background:var(--warn-soft);border-color:#ecd08a;color:#5c3d00}
+  .alert.err{background:var(--red-soft);border-color:var(--red-line);color:#7a0c12}
+  .alert ul{margin:6px 0 0;padding-left:18px}
+  .status{font-size:12px;color:var(--ink-3)}
+  .status.ok{color:var(--ok)}
+
+  footer{margin-top:18px;color:var(--ink-2);font-size:12px;line-height:1.6}
+  footer p{margin:4px 0}
+  .formula{font-family:var(--mono);font-size:12px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+
+  .grid > *{min-width:0}
+  @media (max-width:1080px){.grid{grid-template-columns:minmax(0,1fr)}.weights{grid-template-columns:repeat(2,minmax(0,1fr))}.tbl-wrap{max-height:520px}}
+  /* Impressão / PDF */
+  @media print{
+    @page{size:A4;margin:14mm 12mm}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{background:#fff;font-size:11px}
+    .wrap{max-width:none;padding:0}
+    .utils,.mode,.mode-hint,.legend,.status,#rankAlert:empty,#dataAlert:empty{display:none!important}
+    .tbl-wrap{max-height:none!important;overflow:visible!important;border:0}
+    thead th{position:static}
+    .sticky{position:static}
+    .card{break-inside:auto;border-color:#ddd}
+    tr{break-inside:avoid}
+    .grid{grid-template-columns:1fr;gap:10px}
+    .grid > section{break-before:auto}
+    #matrix td.sticky{min-width:0}
+    .weights{grid-template-columns:repeat(4,1fr)}
+    #matrix input{border:0;background:none;padding:2px 4px;min-width:0}
+    body.print-report .wrap > *:not(#report):not(.credit){display:none!important}
+    .credit{break-inside:avoid}
+    #obrasFilter{display:none!important}
+    #obras{break-before:page}
+    body.print-report #report{display:block}
+  }
+  #report .rh{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--red);padding-bottom:8px;margin-bottom:12px}
+  #report h1{font-size:17px;margin:0}
+  #report .meta{font-size:11px;color:var(--ink-2);text-align:right}
+  #report table.rw{width:auto;margin:6px 0 14px}
+  #report table.rw td,#report table.rw th{padding:3px 10px;font-size:11px}
+  #report .cap2{font-size:11px;color:var(--ink-2);margin:8px 0 0;line-height:1.5}
+  #report .tt{font-weight:600;font-size:12px;margin:12px 0 4px}
+  @media (max-width:560px){details.exp .menu{right:auto;left:0}.weights{grid-template-columns:1fr}header.top h1{font-size:19px}.bar{display:none}.wrap{padding-block:14px 32px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="deco" aria-hidden="true"><svg class="chev" viewBox="0 0 300 180" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="16">
+    <path d="M40 -20 L130 90 L40 200"/><path d="M110 -20 L200 90 L110 200"/><path d="M180 -20 L270 90 L180 200"/></g></svg></div>
+  <div class="brand">
+    <svg class="flame" viewBox="0 0 48 48" aria-hidden="true">
+      <defs><linearGradient id="fg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#c1121f"/><stop offset=".6" stop-color="#e2580c"/><stop offset="1" stop-color="#f2a516"/></linearGradient></defs>
+      <path fill="url(#fg)" d="M24 3c2 7 9 10 10 19 1 3-0 6-1 8 3-2 4-5 4-8 4 4 5 9 5 12 0 9-8 13-18 13S6 43 6 34c0-7 4-11 7-14 0 3 1 6 4 7-2-9 3-16 7-24z"/>
+      <path fill="#ffd36a" opacity=".9" d="M24 24c1 4 6 6 6 12 0 4-3 7-6 7s-6-3-6-7c0-3 2-5 3-6 0 2 1 3 2 3-1-4 0-7 1-9z"/>
+    </svg>
+    <div>
+      <div class="kicker">CBMDF · Apoio à decisão</div>
+      <h1>Priorização de Regiões Administrativas para novos GBMs</h1>
+      <p>Índice de prioridade por soma ponderada de quatro critérios normalizados pelo método Min-Max. Altere os dados ou os pesos e o ranking é recalculado na hora.</p>
+    </div>
+  </div>
+  <div class="utils">
+    <span class="impgroup">
+    <button type="button" id="btnImport" class="imp" title="Importar planilha de respostas do formulário de consulta (AHP)">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>Importar respostas
+    </button>
+    <span class="helpwrap">
+      <button type="button" class="help" id="btnImpHelp" aria-label="Como funciona a importação de respostas" aria-describedby="impTip">?</button>
+      <span class="tip" role="tooltip" id="impTip">
+        <b>Formulário de consulta aos especialistas (AHP)</b>
+        <span>Cada oficial compara os 4 critérios dois a dois, em 6 perguntas: Atendimentos × População, Atendimentos × Distância, Atendimentos × GBM, População × Distância, População × GBM e Distância × GBM.</span>
+        <span>Em cada par ele indica qual critério pesa mais e quanto, na escala de Saaty: igual importância (1), moderadamente (3), fortemente (5), muito fortemente (7) ou extremamente mais importante (9).</span>
+        <span>Ao importar a planilha de respostas do Google Forms (.xlsx ou .csv), o painel monta a matriz de cada resposta, verifica a consistência (RC até 0,10, com correção quando necessário) e combina tudo com as respostas do TCC por média geométrica para recalcular os pesos.</span>
+        <span class="tip-link"><b>Formulário original</b>, para usar como modelo ou coletar novas respostas: <a href="https://forms.gle/jJoEmV13YgEz45Pt9" target="_blank" rel="noopener">forms.gle/jJoEmV13YgEz45Pt9</a></span>
+      </span>
+    </span>
+    </span>
+    <input type="file" id="fileImport" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+    <span class="impgroup red">
+    <details class="exp" id="expMenu">
+      <summary>Exportar <span aria-hidden="true">▾</span></summary>
+      <div class="menu" role="menu">
+        <h3>Para relatório técnico</h3>
+        <button type="button" role="menuitem" data-exp="report">Relatório do ranking (PDF)<small>Pesos, ranking colorido, data e fontes; escolha “Salvar como PDF”</small></button>
+        <button type="button" role="menuitem" data-exp="png">Ranking em imagem (PNG)<small>Para colar direto no Word</small></button>
+        <button type="button" role="menuitem" data-exp="dash">Dashboard completo (PDF)<small>Pesos, matriz e ranking como estão na tela</small></button>
+        <h3>Dados</h3>
+        <button type="button" role="menuitem" data-exp="rankcsv">Ranking em planilha (CSV)<small>Posição, índice, faixa e critérios</small></button>
+        <button type="button" role="menuitem" data-exp="csv">Matriz de dados (CSV)<small>Os valores editáveis de todas as RAs</small></button>
+      </div>
+    </details>
+    <span class="helpwrap">
+      <button type="button" class="help" id="btnExpHelp" aria-label="O que cada exportação gera" aria-describedby="btnExpHelpTip">?</button>
+      <span class="tip" role="tooltip" id="btnExpHelpTip">
+        <b>Exportar o cenário atual</b>
+        <span>Gera arquivos com os dados, os pesos e o ranking que estão na tela neste momento.</span>
+        <span>Relatório do ranking: pesos, ranking colorido, validação frente ao Plano de Obras, fontes e autoria, pronto para salvar em PDF. Ranking em imagem: PNG para colar no Word. Dashboard completo: cópia da tela inteira em PDF.</span>
+        <span>Ranking e Matriz em CSV abrem no Excel. Todos os arquivos levam a data e a hora no nome, para identificar cada cenário.</span>
+      </span>
+    </span>
+    </span>
+    <span class="impgroup">
+    <button type="button" id="btnReset" class="imp">Restaurar dados e pesos iniciais</button>
+    <span class="helpwrap">
+      <button type="button" class="help" id="btnResetHelp" aria-label="O que a restauração desfaz" aria-describedby="btnResetHelpTip">?</button>
+      <span class="tip" role="tooltip" id="btnResetHelpTip">
+        <b>Voltar ao cenário do TCC</b>
+        <span>Recoloca os dados originais da matriz, os pesos do AHP do TCC (47%, 26%, 14% e 13%), o critério GBM binário e apenas as 4 respostas originais dos especialistas.</span>
+        <span>As respostas importadas e todas as edições salvas neste navegador são apagadas. O botão pede um segundo clique para confirmar, e a ação não pode ser desfeita.</span>
+      </span>
+    </span>
+    </span>
+  </div>
+</header>
+
+<!-- BLOCO 3: Pesos -->
+<section class="card" aria-labelledby="h-pesos">
+  <div class="card-head">
+    <div>
+      <h2 id="h-pesos"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Pesos dos critérios</h2>
+      <p class="sub">Escala de 0% a 100%, em passos de 1 ponto. A soma dos quatro pesos é travada em 100%: para aumentar um critério, reduza antes outro.</p>
+    </div>
+    <span class="status" id="saveStatus" aria-live="polite"></span>
+  </div>
+  <div class="weights" id="weights"></div>
+  <div class="sumline">
+    <span class="budget"><span class="bmeter" aria-hidden="true"><i id="wMeter"></i></span>Soma dos pesos: <b id="wSum">100%</b> de 100%</span>
+    <span>Disponível para distribuir: <b id="wFree">0%</b></span>
+    <span id="wNote" class="wnote"></span>
+  </div>
+  <div class="ahp" id="ahpBox">
+    <div class="ahp-head">
+      <div>
+        <b>Origem dos pesos: consulta a especialistas (AHP)</b>
+        <span class="ahp-sum" id="ahpSum"></span>
+      </div>
+      <div class="ahp-actions">
+        <button type="button" class="sm" id="btnApplyAhp">Reaplicar pesos do AHP</button>
+        <button type="button" class="sm" id="btnAhpToggle" aria-expanded="false" aria-controls="ahpList">Mostrar respostas</button>
+      </div>
+    </div>
+    <div id="ahpList" hidden></div>
+  </div>
+</section>
+
+<div class="grid">
+  <!-- BLOCO 1: Matriz -->
+  <section class="card" aria-labelledby="h-matriz">
+    <div class="card-head">
+      <div>
+        <h2 id="h-matriz"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>Matriz de dados</h2>
+        <p class="sub">37 RAs. As células numéricas são editáveis; aceita vírgula ou ponto. RAs com Atendimentos, População ou Distância igual a zero ficam fora do cálculo até serem preenchidas.</p>
+      </div>
+    </div>
+    <div id="dataAlert"></div>
+    <div class="tbl-wrap">
+      <table id="matrix">
+        <thead>
+          <tr>
+            <th class="l sticky">Região Administrativa</th>
+            <th>Atendimentos</th>
+            <th>GBMs multiemprego na RA</th>
+            <th>População</th>
+            <th>Distância ao GBM mais próximo (km)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <span><i class="sw e"></i>Célula editável</span>
+      <span><i class="sw m"></i>Valor ausente</span>
+      <span><i class="sw b"></i>Valor inválido</span>
+    </div>
+  </section>
+
+  <!-- BLOCO 2: Ranking -->
+  <section class="card" aria-labelledby="h-rank">
+    <div class="card-head">
+      <div>
+        <h2 id="h-rank"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20V12M12 20V5M19 20v-5"/></svg>Ranking de prioridade</h2>
+        <p class="sub">Ordem decrescente do índice (0 a 100). Desempate: mais atendimentos; depois ordem alfabética.</p>
+      </div>
+    </div>
+    <div class="plegend" id="plegend" aria-label="Faixas de prioridade por posição">
+      <span class="l1"><i></i>Muito alta · 1º a 9º</span>
+      <span class="l2"><i></i>Alta · 10º a 18º</span>
+      <span class="l3"><i></i>Moderada · 19º a 27º</span>
+      <span class="l4"><i></i>Baixa · 28º a 35º</span>
+    </div>
+    <div id="rankAlert" aria-live="polite"></div>
+    <div class="tbl-wrap">
+      <table id="ranking" class="rk">
+        <thead>
+          <tr>
+            <th class="l">Pos.</th>
+            <th class="l">Região Administrativa</th>
+            <th>Índice de prioridade</th>
+            <th>Atendimentos</th>
+            <th>GBMs</th>
+            <th title="Variação de posição em relação ao cenário de referência do TCC">Var.*</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:8px">* Variação de posição em relação ao cenário de referência: dados e pesos iniciais, critério GBM binário.</p>
+  </section>
+</div>
+
+<!-- Validação frente ao Plano de Obras -->
+<section class="card" id="obras" aria-labelledby="h-obras" style="margin-top:16px">
+  <div class="card-head">
+    <div>
+      <h2 id="h-obras"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/><path d="M9 11h6"/></svg>Validação frente ao Plano de Obras 2025-2030</h2>
+      <p class="sub">Cada RA, na ordem do ranking atual, comparada com o que consta no Plano de Obras do CBMDF (COMAP, SEI 00053-00008114/2026-84).</p>
+    </div>
+    <div class="mode" role="group" aria-label="Filtro do quadro" id="obrasFilter" style="margin-top:0">
+      <button type="button" data-f="all">Todas as RAs</button>
+      <button type="button" data-f="top">Prioridade muito alta</button>
+      <button type="button" data-f="nogbm">Sem GBM</button>
+    </div>
+  </div>
+  <div class="kpis" id="obrasKpis"></div>
+  <div class="tbl-wrap" style="max-height:none">
+    <table id="obrasTbl" class="ob">
+      <thead><tr>
+        <th class="l">Pos.</th><th class="l">Região Administrativa</th><th>GBMs</th>
+        <th class="l">Situação no Plano de Obras</th><th class="l">Detalhe</th><th class="l">Leitura</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin-top:10px"><b>Leitura:</b> “Convergente” = RA sem GBM na faixa muito alta ou alta que já tem unidade prevista, em licitação ou em obra; “Possível lacuna” = RA sem GBM nessas faixas sem nenhuma unidade no Plano; “Reforço” = RA que já tem GBM e figura entre as de prioridade muito alta. A aderência considera as RAs sem GBM da faixa muito alta, como na Tabela 9 do TCC. Não foram associados a uma RA específica o 5º GBM (Aeroporto) e o 26º GBM (BR 070), por não indicarem a região administrativa no documento.</p>
+</section>
+
+<section id="report" aria-hidden="true"></section>
+
+<div class="modal" id="impModal" hidden role="dialog" aria-modal="true" aria-labelledby="impTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h2 id="impTitle">Importar respostas do formulário</h2>
+        <p class="sub" id="impFile"></p>
+      </div>
+      <button type="button" class="x" id="impClose" aria-label="Fechar">×</button>
+    </div>
+    <div id="impBody"></div>
+    <div class="modal-foot">
+      <span class="sub" id="impHint"></span>
+      <div class="utils2">
+        <button type="button" id="impCancel">Cancelar</button>
+        <button type="button" id="impOk" class="primary">Incluir selecionadas e recalcular</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Autoria -->
+<section class="credit" aria-labelledby="h-credit">
+  <svg class="credit-flame" viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M24 3c2 7 9 10 10 19 1 3-0 6-1 8 3-2 4-5 4-8 4 4 5 9 5 12 0 9-8 13-18 13S6 43 6 34c0-7 4-11 7-14 0 3 1 6 4 7-2-9 3-16 7-24z"/></svg>
+  <div>
+    <h2 id="h-credit">Origem e autoria</h2>
+    <p>Este painel é um produto do Trabalho de Conclusão de Curso do <b>Cap. QOBM/Comb. Matheus Castro de Carvalho</b>, apresentado ao Curso de Aperfeiçoamento de Oficiais (CAO/10) do CBMDF, sob orientação do Maj. QOBM/Comb. Hugo Batista Gomes. A metodologia, os critérios, os dados de referência e os pesos iniciais foram desenvolvidos nesse trabalho.</p>
+    <p class="ref"><b>Como citar:</b> CARVALHO, M. C. de. <b>Subsídios para o plano de expansão do CBMDF</b>: um modelo multicritério para priorização de novas unidades operacionais no Distrito Federal. 2026. Artigo científico (Curso de Aperfeiçoamento de Oficiais) – Centro de Estudos de Política, Estratégia e Doutrina, Corpo de Bombeiros Militar do Distrito Federal, Brasília, 2026.</p>
+    <p>O uso, a adaptação e a atualização desta ferramenta pelos militares do CBMDF são livres e incentivados, desde que seja mantida a referência ao trabalho de origem.</p>
+  </div>
+</section>
+
+<footer>
+  <p><b>Cálculo.</b> Atendimentos, população e distância: <span class="formula">z = (x − mín) / (máx − mín)</span>. GBMs: normalização inversa <span class="formula">z = (máx − x) / (máx − mín)</span>, de modo que RAs com menos GBMs recebem maior contribuição. No modo binário, a normalização inversa é aplicada ao indicador “possui GBM” (0 ou 1). Critério com todos os valores iguais contribui com zero. Índice: <span class="formula">IP = 100 · Σ w*·z</span>, com <span class="formula">w* = w / Σw</span>.</p>
+  <p><b>Dados iniciais.</b> Atendimentos 2025: GESINT/CBMDF. População: PDAD 2024/IPEDF. Distância viária do centroide ponderado pela densidade populacional ao GBM mais próximo (QGIS). Quantidade de GBMs multiemprego: Matriz Operacional do CBMDF (BG nº 023/2026). Pesos iniciais: AHP do TCC arredondados (46,58%, 26,04%, 14,07% e 13,31%).</p>
+  <p><b>Salvamento.</b> As alterações são guardadas automaticamente no armazenamento local deste navegador. Dependendo de como o arquivo é aberto (outro navegador, janela anônima ou arquivo copiado para outra pasta), elas podem não ser recuperadas. Use “Exportar › Matriz de dados (CSV)” para guardar uma cópia.</p>
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Dados iniciais (TCC, Tabela 2 + contagem de GBMs) ---------- */
+var INITIAL = [
+  ["Água Quente",311,0,11306,8.87],["Águas Claras",4302,1,141872,1.57],["Arapoanga",1056,0,49067,3.27],
+  ["Arniqueira",1750,0,44774,2.90],["Brazlândia",3303,1,41859,3.08],["Candangolândia",1538,1,14540,1.02],
+  ["Ceilândia",16362,2,287113,3.09],["Cruzeiro",1012,0,26435,2.55],["Fercal",299,0,9141,14.68],
+  ["Gama",7268,1,133948,2.11],["Guará",6473,1,127952,2.76],["Itapoã",2044,0,67021,2.79],
+  ["Jardim Botânico",2647,0,75133,3.14],["Lago Norte",3685,1,43817,2.86],["Lago Sul",3456,1,27213,6.38],
+  ["Núcleo Bandeirante",2792,1,22566,0.98],["Paranoá",4618,1,55551,1.83],["Park Way",2120,0,22667,6.16],
+  ["Planaltina",7095,1,121856,1.47],["Plano Piloto",34446,3,207996,5.25],["Recanto das Emas",6410,2,105862,1.15],
+  ["Riacho Fundo",2585,1,41040,2.53],["Riacho Fundo II",2057,0,70180,4.31],["Samambaia",11233,1,227118,0.92],
+  ["Santa Maria",5335,1,121635,5.06],["São Sebastião",5497,1,99050,1.04],["SCIA",1068,0,38047,5.67],
+  ["SIA",2679,1,5630,2.43],["Sobradinho",5412,1,70608,0.88],["Sobradinho II",2549,0,79932,6.67],
+  ["Sol Nascente e Pôr do Sol",2564,0,108713,4.80],["Sudoeste/Octogonal",2004,1,46004,2.18],
+  ["Taguatinga",13138,1,201332,1.88],["Varjão",399,0,9017,5.52],["Vicente Pires",3916,0,105062,7.42],
+  /* RAs criadas recentemente: sem dados consolidados no TCC; entram no cálculo quando forem preenchidas */
+  ["Ponte Alta",0,0,0,0],["26 de Setembro",0,0,0,0]
+];
+var NEW_RAS = ["Ponte Alta","26 de Setembro"];
+var BASE_N = 35;
+var CRIT = [
+  {key:"atend", label:"Atendimentos", col:1, dir:+1, intOnly:false, thousands:true},
+  {key:"gbm",   label:"GBMs multiemprego na RA", col:2, dir:-1, intOnly:true, thousands:true},
+  {key:"pop",   label:"População", col:3, dir:+1, intOnly:false, thousands:true},
+  {key:"dist",  label:"Distância ao GBM mais próximo", col:4, dir:+1, intOnly:false, thousands:false}
+];
+var W0 = {atend:47, gbm:26, pop:14, dist:13};
+var MODE0 = "bin";
+var STORE_KEY = "cbmdf_priorizacao_gbms_v1";
+
+/* ---------- Estado ---------- */
+var state = fresh();
+var lastRes = null;
+function fresh(){
+  return {
+    rows: INITIAL.map(function(r){ return {ra:r[0], atend:r[1], gbm:r[2], pop:r[3], dist:r[4]}; }),
+    raw: {},          /* texto digitado quando inválido: "i|key" -> string */
+    w: {atend:W0.atend, gbm:W0.gbm, pop:W0.pop, dist:W0.dist},
+    mode: MODE0,
+    experts: [],      /* respostas importadas do formulário (somam-se às do TCC) */
+    baseOn: [true,true,true,true]  /* respostas do TCC marcadas para o cálculo */
+  };
+}
+
+/* ---------- Formatação e leitura ---------- */
+var nf = function(v, d){ return v.toLocaleString("pt-BR",{minimumFractionDigits:d, maximumFractionDigits:d}); };
+function fmtCell(v, c){
+  if (v === null || v === undefined) return "";
+  if (c.key === "dist") return nf(v, 2);
+  if (c.key === "gbm") return String(v);
+  return Number.isInteger(v) ? nf(v,0) : v.toLocaleString("pt-BR",{maximumFractionDigits:3});
+}
+/* Retorna {ok:true,v:number|null} ou {ok:false} */
+function parseCell(str, c){
+  var s = String(str).trim().replace(/\s/g,"");
+  if (s === "") return {ok:true, v:null};
+  if (s.indexOf(",") >= 0){ s = s.replace(/\./g,"").replace(",", "."); }
+  else if (c.thousands && /^\d{1,3}(\.\d{3})+$/.test(s)){ s = s.replace(/\./g,""); }
+  if (!/^\d+(\.\d+)?$/.test(s)) return {ok:false};
+  var v = Number(s);
+  if (!isFinite(v) || v < 0) return {ok:false};
+  if (c.intOnly && !Number.isInteger(v)) return {ok:false};
+  return {ok:true, v:v};
+}
+
+/* ---------- Cálculo ---------- */
+function compute(rows, w, mode){
+  var issues = [];
+  rows.forEach(function(r, i){
+    CRIT.forEach(function(c){
+      if (state.raw[i+"|"+c.key] !== undefined) issues.push({ra:r.ra, c:c.label, t:"inválido"});
+      else if (r[c.key] === null) issues.push({ra:r.ra, c:c.label, t:"ausente"});
+    });
+  });
+  if (issues.length) return {error:"data", issues:issues};
+  var sumW = CRIT.reduce(function(s,c){ return s + w[c.key]; }, 0);
+  if (sumW <= 0) return {error:"weights"};
+  var eff = {}; CRIT.forEach(function(c){ eff[c.key] = w[c.key]/sumW; });
+  var pending = rows.filter(isPending), all = rows;
+  rows = rows.filter(function(r){ return !isPending(r); });
+  if (rows.length < 2) return {error:"few", pending:pending};
+  var z = rows.map(function(){ return {}; });
+  CRIT.forEach(function(c){
+    var vals = rows.map(function(r){
+      var v = r[c.key];
+      return (c.key === "gbm" && mode === "bin") ? (v > 0 ? 1 : 0) : v;
+    });
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), rg = mx - mn;
+    vals.forEach(function(v, i){
+      z[i][c.key] = rg === 0 ? 0 : (c.dir > 0 ? (v - mn)/rg : (mx - v)/rg);
+    });
+  });
+  var out = rows.map(function(r, i){
+    var ip = 0; CRIT.forEach(function(c){ ip += eff[c.key]*z[i][c.key]; });
+    return {ra:r.ra, ip:100*ip, atend:r.atend, gbm:r.gbm};
+  });
+  out.sort(function(a,b){
+    if (b.ip !== a.ip) return b.ip - a.ip;
+    if (b.atend !== a.atend) return b.atend - a.atend;
+    return a.ra.localeCompare(b.ra, "pt-BR");
+  });
+  out.forEach(function(o,i){ o.pos = i+1; });
+  return {ranking:out, eff:eff, sumW:sumW, pending:pending};
+}
+/* RA aguardando dados: Atendimentos, População ou Distância igual a zero.
+   Fica fora do cálculo para não distorcer a normalização das demais. */
+function isPending(r){ return r.atend === 0 || r.pop === 0 || r.dist === 0; }
+function bandSize(){ var n = (lastRes && lastRes.ranking) ? lastRes.ranking.length : BASE_N; return Math.ceil(n/4); }
+function bandOf(pos){ return Math.min(3, Math.floor((pos-1)/bandSize())); }
+function bandRanges(){
+  var n = (lastRes && lastRes.ranking) ? lastRes.ranking.length : BASE_N, sz = bandSize(), out = [];
+  for (var b = 0; b < 4; b++){ var a = b*sz+1, z = b === 3 ? n : Math.min(n, (b+1)*sz); out.push(a+"º a "+z+"º"); }
+  return out;
+}
+/* Casas decimais mínimas (2 a 6) para que valores distintos não apareçam iguais */
+function decimalsFor(list){
+  for (var d = 2; d <= 6; d++){
+    var ok = true;
+    for (var i = 1; i < list.length; i++){
+      if (list[i].ip !== list[i-1].ip && list[i].ip.toFixed(d) === list[i-1].ip.toFixed(d)){ ok = false; break; }
+    }
+    if (ok) return d;
+  }
+  return 6;
+}
+
+/* Ranking de referência (cenário do TCC) para a coluna de variação */
+var REF_POS = (function(){
+  var s = fresh(), saved = state; state = s;
+  var r = compute(s.rows, s.w, s.mode); state = saved;
+  var m = {}; r.ranking.forEach(function(o){ m[o.ra] = o.pos; }); return m;
+})();
+
+/* ---------- Interface: pesos ---------- */
+var SV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+var ICONS = {
+  /* sirene */
+  atend: SV+'<path d="M7 17v-5a5 5 0 0 1 10 0v5"/><path d="M4 21h16M5 17h14v4H5z"/><path d="M12 2v2M4.2 5.2l1.4 1.4M19.8 5.2l-1.4 1.4"/></svg>',
+  /* quartel com porta de garagem */
+  gbm:   SV+'<path d="M3 10l9-6 9 6"/><path d="M5 9v12h14V9"/><path d="M9 21v-7h6v7M9 17h6"/></svg>',
+  /* pessoas */
+  pop:   SV+'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14c3 0 5 2 5 5"/></svg>',
+  /* rota com marcador */
+  dist:  SV+'<circle cx="6" cy="18" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6H10a3 3 0 0 1 0-6h4"/><path d="M18 2a3 3 0 0 0-3 3c0 2.2 3 5 3 5s3-2.8 3-5a3 3 0 0 0-3-3z"/></svg>'
+};
+var wBox = document.getElementById("weights");
+var sliders = {}, valEls = {}, effEls = {}, modeBtns = {}, stepBtns = {};
+CRIT.forEach(function(c){
+  var d = document.createElement("div"); d.className = "w";
+  var id = "w_"+c.key;
+  d.innerHTML =
+    '<div class="w-top"><span class="lab"><span class="ci" aria-hidden="true">'+ICONS[c.key]+'</span><label for="'+id+'">'+c.label+'</label></span><span class="val" id="'+id+'_v"></span></div>'+
+    '<div class="srow"><button type="button" class="step" data-d="-1" aria-label="Diminuir '+c.label+' em 1 ponto">−</button>'+
+    '<div class="rwrap"><input type="range" id="'+id+'" min="0" max="100" step="1" aria-describedby="'+id+'_e">'+
+    '<div class="scale"><span>0%</span><span>50%</span><span>100%</span></div></div>'+
+    '<button type="button" class="step" data-d="1" aria-label="Aumentar '+c.label+' em 1 ponto">+</button></div>'+
+    '<div class="eff" id="'+id+'_e">Peso efetivo: <b>–</b></div>';
+  if (c.key === "gbm"){
+    d.innerHTML +=
+      '<div class="moderow"><div class="mode" role="group" aria-label="Modo do critério GBM">'+
+      '<button type="button" data-mode="bin">Binário (TCC)</button>'+
+      '<button type="button" data-mode="qtd">Quantidade</button></div>'+
+      '<span class="helpwrap"><button type="button" class="help lt" id="btnModeHelp" aria-label="Diferença entre Binário e Quantidade" aria-describedby="btnModeHelpTip">?</button>'+
+      '<span class="tip" role="tooltip" id="btnModeHelpTip"><b>Como o critério GBM é calculado</b>'+
+      '<span><b>Binário (TCC):</b> considera só se a RA tem ou não GBM. Sem GBM recebe nota 1; com um ou mais, nota 0. É o modo usado no TCC e o que corresponde aos pesos dados pelos especialistas.</span>'+
+      '<span><b>Quantidade:</b> a nota cai conforme o número de GBMs na RA, de 1 (nenhum) até 0 (a RA com mais GBMs). Diferencia RAs com 1, 2 ou 3 unidades, mas diminui a vantagem de quem não tem GBM: RAs com 1 GBM recebem 0,67 e sobem no ranking.</span>'+
+      '<span>Use Quantidade para explorar cenários; para decisões, prefira o Binário.</span></span></span></div>'+
+      '<div class="mode-hint" id="modeHint"></div>';
+  }
+  wBox.appendChild(d);
+  sliders[c.key] = d.querySelector("input");
+  valEls[c.key] = d.querySelector(".val");
+  effEls[c.key] = d.querySelector(".eff b");
+  function setW(v){
+    /* Trava: a soma dos quatro pesos nunca passa de 100% */
+    var others = 0;
+    CRIT.forEach(function(o){ if (o.key !== c.key) others += state.w[o.key]; });
+    var cap = 100 - others;
+    if (v > cap){ v = cap; flashCap(c.key); }
+    if (v < 0) v = 0;
+    state.w[c.key] = v;
+    refresh();
+  }
+  sliders[c.key].addEventListener("input", function(){ setW(parseInt(this.value, 10)); });
+  stepBtns[c.key] = {};
+  Array.prototype.forEach.call(d.querySelectorAll(".step"), function(btn){
+    var dlt = parseInt(btn.dataset.d, 10), hold = null, rep = null;
+    stepBtns[c.key][dlt] = btn;
+    function once(){ setW(state.w[c.key] + dlt); if (btn.disabled) stop(); }
+    function stop(){ clearTimeout(hold); clearInterval(rep); hold = rep = null; }
+    /* clique simples soma 1; segurar repete */
+    btn.addEventListener("pointerdown", function(e){
+      if (e.button !== 0) return;
+      e.preventDefault(); once();
+      hold = setTimeout(function(){ rep = setInterval(once, 70); }, 400);
+    });
+    ["pointerup","pointerleave","pointercancel"].forEach(function(ev){ btn.addEventListener(ev, stop); });
+    btn.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); once(); } });
+  });
+});
+Array.prototype.forEach.call(wBox.querySelectorAll(".mode button"), function(b){
+  modeBtns[b.dataset.mode] = b;
+  b.addEventListener("click", function(){ state.mode = b.dataset.mode; refresh(); });
+});
+
+/* ---------- Interface: matriz ---------- */
+var mBody = document.querySelector("#matrix tbody");
+var inputs = [], trs = [];
+function paintPending(){ state.rows.forEach(function(r, i){ if (trs[i]){ var p = isPending(r); trs[i].classList.toggle("pending", p); trs[i].title = p ? "Aguardando dados: fora do cálculo" : ""; } }); }
+function buildMatrix(){
+  mBody.innerHTML = ""; inputs = []; trs = [];
+  state.rows.forEach(function(r, i){
+    var tr = document.createElement("tr");
+    var th = document.createElement("td"); th.className = "l sticky"; th.textContent = r.ra;
+    if (NEW_RAS.indexOf(r.ra) >= 0){ var bd = document.createElement("span"); bd.className = "newra"; bd.textContent = "nova RA"; th.appendChild(bd); }
+    tr.appendChild(th); trs.push(tr);
+    var rowInputs = {};
+    CRIT.forEach(function(c){
+      var td = document.createElement("td");
+      var inp = document.createElement("input");
+      inp.type = "text"; inp.inputMode = c.intOnly ? "numeric" : "decimal"; inp.autocomplete = "off";
+      inp.className = c.key === "gbm" ? "gbm" : "";
+      inp.setAttribute("aria-label", c.label+" – "+r.ra);
+      inp.dataset.i = i; inp.dataset.k = c.key;
+      var rawKey = i+"|"+c.key;
+      inp.value = state.raw[rawKey] !== undefined ? state.raw[rawKey] : fmtCell(r[c.key], c);
+      inp.addEventListener("input", onCellInput);
+      inp.addEventListener("blur", onCellBlur);
+      td.appendChild(inp); tr.appendChild(td); rowInputs[c.key] = inp;
+    });
+    inputs.push(rowInputs);
+    mBody.appendChild(tr);
+  });
+}
+function critOf(k){ for (var j=0;j<CRIT.length;j++) if (CRIT[j].key===k) return CRIT[j]; }
+function onCellInput(e){
+  var inp = e.target, i = +inp.dataset.i, c = critOf(inp.dataset.k), key = i+"|"+c.key;
+  var p = parseCell(inp.value, c);
+  if (p.ok){ state.rows[i][c.key] = p.v; delete state.raw[key]; }
+  else { state.rows[i][c.key] = null; state.raw[key] = inp.value; }
+  refresh();
+}
+function onCellBlur(e){
+  var inp = e.target, i = +inp.dataset.i, c = critOf(inp.dataset.k);
+  if (state.raw[i+"|"+c.key] === undefined) inp.value = fmtCell(state.rows[i][c.key], c);
+}
+function paintCells(){
+  inputs.forEach(function(ri, i){
+    CRIT.forEach(function(c){
+      var inp = ri[c.key], bad = state.raw[i+"|"+c.key] !== undefined, miss = !bad && state.rows[i][c.key] === null;
+      inp.classList.toggle("bad", bad); inp.classList.toggle("miss", miss);
+      inp.setAttribute("aria-invalid", bad || miss ? "true" : "false");
+      inp.title = bad ? (c.intOnly ? "Valor inválido: use número inteiro maior ou igual a zero" : "Valor inválido: use número maior ou igual a zero") : (miss ? "Valor ausente" : "");
+    });
+  });
+}
+
+/* ---------- Interface: ranking ---------- */
+var rBody = document.querySelector("#ranking tbody");
+var rAlert = document.getElementById("rankAlert"), dAlert = document.getElementById("dataAlert");
+function esc(s){ return String(s).replace(/[&<>"]/g, function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]; }); }
+
+function refresh(){
+  /* pesos */
+  var sum = 0;
+  CRIT.forEach(function(c){ sliders[c.key].value = state.w[c.key]; valEls[c.key].textContent = state.w[c.key]+"%"; sum += state.w[c.key]; });
+  document.getElementById("wSum").textContent = sum+"%";
+  document.getElementById("wFree").textContent = (100-sum)+"%";
+  document.getElementById("wMeter").style.width = sum+"%";
+  document.getElementById("wNote").textContent = (sum > 0 && sum < 100)
+    ? "Com soma abaixo de 100%, os pesos são reescalados proporcionalmente no cálculo (ver peso efetivo)." : "";
+  CRIT.forEach(function(c){
+    var cap = 100 - (sum - state.w[c.key]);
+    stepBtns[c.key][-1].disabled = state.w[c.key] <= 0;
+    stepBtns[c.key][1].disabled = state.w[c.key] >= cap;
+    stepBtns[c.key][1].title = state.w[c.key] >= cap ? "Soma já está em 100%: reduza outro critério" : "";
+  });
+  Object.keys(modeBtns).forEach(function(m){ modeBtns[m].setAttribute("aria-pressed", String(state.mode === m)); });
+  document.getElementById("modeHint").textContent = state.mode === "bin"
+    ? "Conta apenas se a RA tem ou não GBM (0 = sem GBM)."
+    : "Cada GBM a mais reduz a contribuição do critério.";
+
+  paintCells();
+  var res = compute(state.rows, state.w, state.mode); lastRes = res;
+  dAlert.innerHTML = ""; rAlert.innerHTML = "";
+
+  if (res.error === "data"){
+    var miss = res.issues.filter(function(x){return x.t==="ausente";}).length;
+    var bad = res.issues.length - miss;
+    var lis = res.issues.slice(0,8).map(function(x){ return "<li>"+esc(x.ra)+": "+esc(x.c)+" ("+x.t+")</li>"; }).join("");
+    if (res.issues.length > 8) lis += "<li>e mais "+(res.issues.length-8)+"…</li>";
+    var msg = '<div class="alert warn"><b>Ranking não calculado.</b> Há '+
+      (miss? miss+" valor(es) ausente(s)":"")+(miss&&bad?" e ":"")+(bad? bad+" valor(es) inválido(s)":"")+
+      ". Preencha ou corrija as células destacadas para obter um ranking confiável.<ul>"+lis+"</ul></div>";
+    rAlert.innerHTML = msg;
+    dAlert.innerHTML = '<div class="alert warn">Células destacadas precisam ser corrigidas. Valores ausentes não são tratados como zero.</div>';
+    rBody.innerHTML = "";
+    CRIT.forEach(function(c){ effEls[c.key].textContent = "–"; });
+  } else if (res.error === "few"){
+    rAlert.innerHTML = '<div class="alert warn"><b>Ranking não calculado.</b> É preciso ao menos duas RAs com dados completos.</div>';
+    rBody.innerHTML = "";
+    CRIT.forEach(function(c){ effEls[c.key].textContent = "–"; });
+  } else if (res.error === "weights"){
+    rAlert.innerHTML = '<div class="alert err"><b>Todos os pesos estão em 0%.</b> Defina pelo menos um peso maior que zero para calcular o ranking ponderado.</div>';
+    rBody.innerHTML = "";
+    CRIT.forEach(function(c){ effEls[c.key].textContent = "–"; });
+  } else {
+    CRIT.forEach(function(c){ effEls[c.key].textContent = nf(100*res.eff[c.key], 2)+"%"; });
+    var d = decimalsFor(res.ranking);
+    var maxIp = Math.max(res.ranking[0].ip, 1e-9);
+    var html = "";
+    res.ranking.forEach(function(o){
+      var ref = REF_POS[o.ra], dv = ref ? ref - o.pos : 0, dcls = !ref ? "same" : (dv>0?"up":(dv<0?"down":"same"));
+      var dtxt = !ref ? "nova" : (dv>0 ? "▲ "+dv : (dv<0 ? "▼ "+(-dv) : "="));
+      var band = bandOf(o.pos)+1;
+      html += '<tr class="p'+band+'">'+
+        '<td class="l pos">'+o.pos+'º</td>'+
+        '<td class="l ra">'+esc(o.ra)+'</td>'+
+        '<td><div class="idx"><span class="bar" aria-hidden="true"><i style="width:'+(100*o.ip/maxIp).toFixed(1)+'%"></i></span>'+
+          '<span class="num">'+nf(o.ip, d)+'</span></div></td>'+
+        '<td class="num">'+fmtCell(o.atend, CRIT[0])+'</td>'+
+        '<td><span class="chip'+(o.gbm===0?" zero":"")+'">'+o.gbm+'</span></td>'+
+        '<td class="delta '+dcls+'" title="'+(ref ? 'Posição de referência: '+ref+'º' : 'RA fora do cenário de referência do TCC')+'">'+dtxt+'</td></tr>';
+    });
+    res.pending.forEach(function(r){
+      html += '<tr class="pend"><td class="l pos">–</td><td class="l ra">'+esc(r.ra)+'</td><td class="l" colspan="2"><span class="badge dup">Aguardando dados</span></td>'+
+        '<td><span class="chip">'+r.gbm+'</span></td><td class="delta same">–</td></tr>';
+    });
+    rBody.innerHTML = html;
+  }
+  var pend = (res.pending || state.rows.filter(isPending));
+  if (!res.error || res.error !== "data"){
+    if (pend.length) dAlert.innerHTML = '<div class="alert info"><b>'+pend.length+' RA'+(pend.length>1?'s':'')+' aguardando dados:</b> '+pend.map(function(r){ return esc(r.ra); }).join(", ")+
+      '. Ficam fora do cálculo até que Atendimentos, População e Distância sejam maiores que zero; ao preencher, o ranking é refeito com '+(state.rows.length - pend.length + 1)+' ou mais RAs.</div>';
+  }
+  var rg = bandRanges();
+  document.getElementById("plegend").innerHTML = ["Muito alta","Alta","Moderada","Baixa"].map(function(n, i){ return '<span class="l'+(i+1)+'"><i></i>'+n+' · '+rg[i]+'</span>'; }).join("");
+  paintPending();
+  renderObras();
+  renderAhp();
+  save();
+}
+
+/* ---------- Plano de Obras 2025-2030 (COMAP) ---------- */
+var ST = {1:"Em construção", 2:"Priorizada no ciclo 2025-2030", 3:"Reforma prevista", 4:"Unidade prevista", 5:"Não consta"};
+/* s = situação; nova = há unidade nova prevista/em licitação/em obra para a RA; d = detalhe */
+var OBRAS = {
+  "Sol Nascente e Pôr do Sol": {s:1, nova:true,  d:"42º GBM tipo C: obra em andamento (seção 5.2)."},
+  "Jardim Botânico":           {s:2, nova:true,  d:"33º GBM tipo C: em desenvolvimento (seção 4.8)."},
+  "SCIA":                      {s:2, nova:true,  d:"40º GBM tipo C (Estrutural/SCIA): em licitação (seção 4.9)."},
+  "Plano Piloto":              {s:2, nova:true,  d:"43º GBM tipo C (Setor de Rádio e TV Sul): em licitação (4.10); reforma geral do 1º GBM (4.4)."},
+  "Gama":                      {s:3, nova:true,  d:"Reforma geral do 16º GBM (4.5); 27º (Gama Oeste) e 28º (Gama Sul) previstos no Quadro 1."},
+  "Vicente Pires":             {s:4, nova:true,  d:"50º GBM tipo C previsto (Quadro 1); sem obra no ciclo."},
+  "Sobradinho II":             {s:4, nova:true,  d:"44º GBM previsto; 29º GBM (Grande Colorado) previsto (Quadro 1)."},
+  "Riacho Fundo II":           {s:4, nova:true,  d:"23º GBM previsto (Quadro 1); sem obra no ciclo."},
+  "Park Way":                  {s:4, nova:true,  d:"35º GBM previsto (Quadro 1); sem obra no ciclo."},
+  "Itapoã":                    {s:4, nova:true,  d:"32º GBM previsto (Quadro 1); sem obra no ciclo."},
+  "Arniqueira":                {s:4, nova:true,  d:"24º GBM previsto (Quadro 1); sem obra no ciclo."},
+  "Cruzeiro":                  {s:4, nova:true,  d:"14º GBM previsto (Quadro 1); sem obra no ciclo."},
+  "Recanto das Emas":          {s:4, nova:true,  d:"20º GBM previsto (Quadro 1); 36º GBM construído."},
+  "Santa Maria":               {s:4, nova:true,  d:"38º GBM (Santa Maria Sul) previsto (Quadro 1)."},
+  "SIA":                       {s:4, nova:true,  d:"39º GBM (SIA Norte) previsto (Quadro 1)."},
+  "Taguatinga":                {s:4, nova:true,  d:"46º (Taguatinga Sul) e 47º (Taguatinga Norte) previstos (Quadro 1)."},
+  "Guará":                     {s:4, nova:true,  d:"30º GBM (Guará II) previsto (Quadro 1)."},
+  "Planaltina":                {s:4, nova:true,  d:"48º GBM (Vale do Amanhecer) previsto (Quadro 1)."},
+  "Brazlândia":                {s:4, nova:true,  d:"31º GBM (INCRA VIII) previsto (Quadro 1)."},
+  "Varjão":                    {s:5, nova:false, d:"Sem obra prevista. O Quadro 1 registra o 49º GBM como construído."}
+};
+function obraOf(ra){ return OBRAS[ra] || {s:5, nova:false, d:"Sem unidade nova ou intervenção prevista."}; }
+var obrasFilter = "all";
+var obrasBtns = {};
+Array.prototype.forEach.call(document.querySelectorAll("#obrasFilter button"), function(b){
+  obrasBtns[b.dataset.f] = b;
+  b.addEventListener("click", function(){ obrasFilter = b.dataset.f; renderObras(); });
+});
+function readingOf(o){
+  var band = bandOf(o.pos), ob = obraOf(o.ra);
+  if (o.gbm > 0) return band === 0 ? {c:"ref", t:"Reforço"} : {c:"na", t:"—"};
+  if (band <= 1) return ob.nova ? {c:"ok", t:"✓ Convergente"} : {c:"gap", t:"! Possível lacuna"};
+  return {c:"na", t:ob.nova ? "Prevista" : "—"};
+}
+function obrasSummary(){
+  var top = lastRes.ranking.filter(function(o){ return bandOf(o.pos) === 0 && o.gbm === 0; });
+  var inPlan = top.filter(function(o){ return obraOf(o.ra).nova; });
+  var gaps = lastRes.ranking.filter(function(o){ return bandOf(o.pos) <= 1 && o.gbm === 0 && !obraOf(o.ra).nova; });
+  return {top:top, inPlan:inPlan, gaps:gaps};
+}
+function obrasRowsHTML(list){
+  return list.map(function(o){
+    var ob = obraOf(o.ra), rd = readingOf(o);
+    return '<tr class="b'+(bandOf(o.pos)+1)+'"><td class="l pos">'+o.pos+'º</td><td class="l ra">'+esc(o.ra)+'</td>'+
+      '<td><span class="chip'+(o.gbm===0?" zero":"")+'">'+o.gbm+'</span></td>'+
+      '<td class="l"><span class="st s'+ob.s+'">'+ST[ob.s]+'</span></td>'+
+      '<td class="l det">'+esc(ob.d)+'</td><td class="l"><span class="rd '+rd.c+'">'+rd.t+'</span></td></tr>';
+  }).join("");
+}
+function renderObras(){
+  Object.keys(obrasBtns).forEach(function(f){ obrasBtns[f].setAttribute("aria-pressed", String(obrasFilter === f)); });
+  var body = document.querySelector("#obrasTbl tbody"), k = document.getElementById("obrasKpis");
+  if (!lastRes || lastRes.error){
+    body.innerHTML = '<tr><td class="l" colspan="6" style="color:var(--ink-3)">O quadro aparece quando houver um ranking válido.</td></tr>';
+    k.innerHTML = ""; return;
+  }
+  var sm = obrasSummary();
+  var pct = sm.top.length ? Math.round(100*sm.inPlan.length/sm.top.length) : 0;
+  k.innerHTML =
+    '<div class="kpi hl"><div class="k">Aderência (sem GBM, prioridade muito alta)</div><div class="v">'+sm.inPlan.length+' de '+sm.top.length+' <small>'+(sm.top.length? pct+'%' : '–')+'</small></div></div>'+
+    '<div class="kpi"><div class="k">Possíveis lacunas (muito alta e alta)</div><div class="v">'+sm.gaps.length+'</div></div>'+
+    '<div class="kpi"><div class="k">Lacunas identificadas</div><div class="v" style="font-size:14px;font-family:var(--font);font-weight:600;line-height:1.3;padding-top:4px">'+(sm.gaps.length ? sm.gaps.map(function(o){ return esc(o.ra)+" ("+o.pos+"º)"; }).join(", ") : "Nenhuma")+'</div></div>'+
+    '<div class="kpi"><div class="k">Em obra ou priorizadas no ciclo</div><div class="v">'+lastRes.ranking.filter(function(o){ var s = obraOf(o.ra).s; return s===1||s===2; }).length+'</div></div>';
+  var list = lastRes.ranking.filter(function(o){
+    return obrasFilter === "all" || (obrasFilter === "top" ? bandOf(o.pos) === 0 : o.gbm === 0);
+  });
+  body.innerHTML = obrasRowsHTML(list);
+}
+
+/* =====================================================================
+   AHP: consulta a especialistas e importação de respostas do formulário
+   Ordem interna das matrizes: Atendimentos, População, Distância, GBM
+   ===================================================================== */
+var AO = ["atend","pop","dist","gbm"];
+var PAIRS = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+var PAIR_TXT = ["Atendimentos × População","Atendimentos × Distância","Atendimentos × GBM","População × Distância","População × GBM","Distância × GBM"];
+/* Respostas do TCC (anonimizadas). codes: + favorece o 1º critério do par, − o 2º.
+   M: matriz após a melhoria de consistência descrita no TCC (seção 2.2.3.3). */
+var BASE_EXPERTS = [
+  {label:"Especialista 1", ts:"2026-08-10 16:30", codes:[7,5,3,-5,-5,9],
+   M:[[1,7,3.48,3],[1/7,1,0.2,0.2],[1/3.48,5,1,2.28],[1/3,5,1/2.28,1]]},
+  {label:"Especialista 2", ts:"2026-08-11 14:24", codes:[5,5,-5,3,-5,1],
+   M:[[1,5,5,1/2.42],[0.2,1,3,0.2],[0.2,1/3,1,0.19],[2.42,5,1/0.19,1]]},
+  {label:"Especialista 3", ts:"2026-08-12 15:18", codes:[5,3,7,3,5,5],
+   M:[[1,3.49,3,7],[1/3.49,1,3,5],[1/3,1/3,1,5],[1/7,0.2,0.2,1]]},
+  {label:"Especialista 4", ts:"2026-08-12 16:02", codes:[5,3,-3,3,-3,-7],
+   M:[[1,3.34,3,1/3],[1/3.34,1,3,1/3],[1/3,1/3,1,1/7],[3,3,7,1]]}
+];
+var RI4 = 0.90;
+
+function matFromCodes(codes){
+  var M = [[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1]];
+  PAIRS.forEach(function(p, k){
+    var c = codes[k], v = c >= 0 ? c : 1/(-c);
+    M[p[0]][p[1]] = v; M[p[1]][p[0]] = 1/v;
+  });
+  return M;
+}
+function ahpW(M){
+  var n = 4, gm = M.map(function(r){ return Math.pow(r.reduce(function(a,b){ return a*b; },1), 1/n); });
+  var s = gm.reduce(function(a,b){ return a+b; },0), w = gm.map(function(x){ return x/s; });
+  var lm = 0;
+  for (var i=0;i<n;i++){ var aw = 0; for (var j=0;j<n;j++) aw += M[i][j]*w[j]; lm += aw/w[i]; }
+  lm /= n;
+  return {w:w, cr:((lm-n)/(n-1))/RI4};
+}
+/* Melhoria de consistência do TCC: ajusta o julgamento mais divergente
+   até a metade do caminho (em escala log) do valor implícito, até RC ≤ 0,10 */
+function improve(M0){
+  var M = M0.map(function(r){ return r.slice(); }), it = 0;
+  for (; it < 20; it++){
+    var r = ahpW(M); if (r.cr <= 0.10) break;
+    var best = -1, bi = 0, bj = 1;
+    for (var i=0;i<4;i++) for (var j=0;j<4;j++){
+      if (i === j) continue;
+      var d = Math.abs(Math.log(M[i][j]) - Math.log(r.w[i]/r.w[j]));
+      if (d > best){ best = d; bi = i; bj = j; }
+    }
+    var nv = Math.exp((Math.log(M[bi][bj]) + Math.log(r.w[bi]/r.w[bj]))/2);
+    M[bi][bj] = nv; M[bj][bi] = 1/nv;
+  }
+  var f = ahpW(M);
+  return {M:M, iters:it, cr:f.cr, w:f.w};
+}
+function aggregate(list){
+  var G = [[1,1,1,1],[1,1,1,1],[1,1,1,1],[1,1,1,1]];
+  for (var i=0;i<4;i++) for (var j=0;j<4;j++){
+    var p = 0; list.forEach(function(M){ p += Math.log(M[i][j]); });
+    G[i][j] = Math.exp(p/list.length);
+  }
+  return ahpW(G);
+}
+function expertObj(e, imported, on){
+  var M0 = matFromCodes(e.codes), r0 = ahpW(M0);
+  var fixed = e.M ? {M:e.M, cr:ahpW(e.M).cr, w:ahpW(e.M).w, iters:null} : improve(M0);
+  return {label:e.label, ts:e.ts, codes:e.codes, imported:!!imported, on:on !== false,
+          M:fixed.M, cr0:r0.cr, cr1:fixed.cr, w:fixed.w, fixed: Math.abs(r0.cr - fixed.cr) > 1e-9};
+}
+var BASE_OBJ = BASE_EXPERTS.map(function(e){ return expertObj(e, false); });
+/* Todas as respostas (TCC + importadas), marcadas ou não */
+function allExperts(){
+  return BASE_OBJ.map(function(e, i){ var o = Object.assign({}, e); o.on = state.baseOn[i] !== false; return o; })
+    .concat(state.experts.map(function(e){ return expertObj(e, true, e.on); }));
+}
+/* Só as marcadas entram no cálculo */
+function selExperts(){ return allExperts().filter(function(e){ return e.on; }); }
+function groupAhp(list){ list = list || selExperts(); return list.length ? aggregate(list.map(function(e){ return e.M; })) : null; }
+/* Arredondamento a inteiros que somam 100 (maiores restos) */
+function round100(w){
+  var raw = w.map(function(x){ return 100*x; }), fl = raw.map(Math.floor);
+  var rest = 100 - fl.reduce(function(a,b){ return a+b; },0);
+  raw.map(function(x,i){ return {i:i, r:x - fl[i]}; }).sort(function(a,b){ return b.r - a.r; })
+     .slice(0, rest).forEach(function(o){ fl[o.i]++; });
+  return fl;
+}
+function ahpRounded(){ var g = groupAhp(); if (!g) return null; var r = round100(g.w), o = {}; AO.forEach(function(k,i){ o[k] = r[i]; }); return o; }
+function ahpApplied(){ var r = ahpRounded(); return !!r && AO.every(function(k){ return state.w[k] === r[k]; }); }
+function applyAhp(){ var r = ahpRounded(); if (r) state.w = r; refresh(); }
+function pct(x, d){ return nf(100*x, d === undefined ? 2 : d)+"%"; }
+function tsFmt(ts){ if (!ts) return "sem data"; var m = ts.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/); return m ? m[3]+"/"+m[2]+"/"+m[1]+" "+m[4]+":"+m[5] : ts; }
+function relabel(){ state.experts.forEach(function(e, i){ e.label = "Especialista "+(BASE_OBJ.length+i+1); }); }
+
+var ahpOpen = false;  /* respostas ocultas por padrão */
+try { ahpOpen = localStorage.getItem(STORE_KEY+"_ahpOpen") === "1"; } catch(e){}
+function renderAhp(){
+  var ex = allExperts(), sel = ex.filter(function(e){ return e.on; }), g = groupAhp(sel), applied = ahpApplied();
+  var nImp = sel.filter(function(e){ return e.imported; }).length, nTcc = sel.length - nImp;
+  document.getElementById("ahpSum").innerHTML = g
+    ? sel.length+" de "+ex.length+" respostas no cálculo ("+nTcc+" do TCC"+(nImp ? " + "+nImp+" importada"+(nImp>1?"s":"") : "")+") · RC do grupo "+nf(g.cr,3)+
+      " · Atend. "+pct(g.w[0])+" · GBM "+pct(g.w[3])+" · Pop. "+pct(g.w[1])+" · Dist. "+pct(g.w[2])+
+      (applied ? '<span class="tag ok">Pesos do AHP aplicados</span>' : '<span class="tag man">Pesos ajustados manualmente</span>')
+    : '<span class="tag man">Nenhuma resposta selecionada</span> Marque ao menos uma resposta para calcular os pesos do AHP; os controles mantêm os valores atuais.';
+  document.getElementById("btnApplyAhp").disabled = applied || !g;
+  var box = document.getElementById("ahpList"), tg = document.getElementById("btnAhpToggle");
+  box.hidden = !ahpOpen; tg.setAttribute("aria-expanded", String(ahpOpen));
+  tg.textContent = ahpOpen ? "Ocultar respostas" : "Mostrar respostas ("+ex.length+")";
+  var h = '<div class="tbl-wrap" style="max-height:none"><table class="ahp-tbl"><thead><tr><th class="l" style="width:34px"><span class="sr">No cálculo</span></th><th class="l">Resposta</th><th class="l">Origem</th><th>RC original</th><th>RC final</th><th>Atend.</th><th>Pop.</th><th>Dist.</th><th>GBM</th><th style="width:40px"></th></tr></thead><tbody>';
+  ex.forEach(function(e, idx){
+    var ii = idx - BASE_OBJ.length;
+    h += '<tr class="'+(e.on?"":"off")+'"><td class="l"><input type="checkbox" class="ahp-on" data-x="'+idx+'" '+(e.on?"checked":"")+' aria-label="Incluir '+esc(e.label)+' no cálculo" title="Incluir no cálculo"></td>'+
+      '<td class="l">'+esc(e.label)+'</td><td class="l"><span class="src'+(e.imported?" imp":"")+'">'+(e.imported ? "Importada" : "TCC")+'</span></td>'+
+      '<td class="num">'+nf(e.cr0,3)+'</td><td class="num">'+nf(e.cr1,3)+(e.fixed?' <span class="badge fix" title="Julgamento ajustado pela melhoria de consistência">aj.</span>':'')+'</td>'+
+      e.w.map(function(x){ return '<td class="num">'+pct(x,1)+'</td>'; }).join("")+
+      '<td>'+(e.imported ? '<button type="button" class="del" data-rm="'+ii+'" aria-label="Excluir '+esc(e.label)+'" title="Excluir resposta importada">×</button>' : '')+'</td></tr>';
+  });
+  h += '<tr class="grp"><td></td><td class="l"><b>Grupo</b></td><td class="l sub">média geométrica das marcadas</td><td></td><td class="num"><b>'+(g?nf(g.cr,3):"–")+'</b></td>'+
+    (g ? g.w.map(function(x){ return '<td class="num"><b>'+pct(x,2)+'</b></td>'; }).join("") : '<td colspan="4" class="sub">sem respostas marcadas</td>')+'<td></td></tr></tbody></table></div>'+
+    '<p class="imp-note">Só as respostas marcadas entram no cálculo dos pesos. As do TCC podem ser desmarcadas, mas não excluídas; as importadas podem ser excluídas no ×. RC: razão de consistência (aceitável até 0,10); respostas acima do limite passam pela melhoria de consistência do TCC antes da agregação por média geométrica.</p>';
+  box.innerHTML = h;
+  Array.prototype.forEach.call(box.querySelectorAll(".ahp-on"), function(cb){
+    cb.addEventListener("change", function(){
+      var x = +cb.dataset.x;
+      if (x < BASE_OBJ.length) state.baseOn[x] = cb.checked; else state.experts[x - BASE_OBJ.length].on = cb.checked;
+      applyAhp();
+    });
+  });
+  Array.prototype.forEach.call(box.querySelectorAll("[data-rm]"), function(b){
+    b.addEventListener("click", function(){ state.experts.splice(+b.dataset.rm, 1); relabel(); applyAhp(); });
+  });
+}
+document.getElementById("btnApplyAhp").addEventListener("click", applyAhp);
+document.getElementById("btnAhpToggle").addEventListener("click", function(){
+  ahpOpen = !ahpOpen;
+  try { localStorage.setItem(STORE_KEY+"_ahpOpen", ahpOpen ? "1" : "0"); } catch(e){}
+  renderAhp();
+});
+
+/* ---------- Leitura de .xlsx (sem bibliotecas) e .csv ---------- */
+async function unzip(buf){
+  var dv = new DataView(buf), u8 = new Uint8Array(buf), eocd = -1;
+  for (var i = u8.length - 22; i >= Math.max(0, u8.length - 70000); i--){ if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; } }
+  if (eocd < 0) throw new Error("O arquivo não parece ser um .xlsx válido.");
+  var n = dv.getUint16(eocd+10, true), p = dv.getUint32(eocd+16, true), files = {}, td = new TextDecoder();
+  for (var k = 0; k < n; k++){
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    var method = dv.getUint16(p+10, true), csize = dv.getUint32(p+20, true);
+    var nl = dv.getUint16(p+28, true), el = dv.getUint16(p+30, true), cl = dv.getUint16(p+32, true), lo = dv.getUint32(p+42, true);
+    var name = td.decode(u8.subarray(p+46, p+46+nl));
+    var start = lo + 30 + dv.getUint16(lo+26, true) + dv.getUint16(lo+28, true);
+    files[name] = {method:method, data:u8.subarray(start, start+csize)};
+    p += 46 + nl + el + cl;
+  }
+  return files;
+}
+async function inflateEntry(f){
+  if (!f) return null;
+  if (f.method === 0) return new TextDecoder().decode(f.data);
+  if (typeof DecompressionStream === "undefined") throw new Error("Este navegador não lê .xlsx diretamente. Salve a planilha como .csv e importe novamente.");
+  var stream = new Blob([f.data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return await new Response(stream).text();
+}
+function xml(s){ return new DOMParser().parseFromString(s, "application/xml"); }
+function colIdx(ref){ var m = ref.match(/^[A-Z]+/)[0], n = 0; for (var i=0;i<m.length;i++) n = n*26 + (m.charCodeAt(i)-64); return n-1; }
+async function readXlsx(buf){
+  var files = await unzip(buf);
+  var wb = xml(await inflateEntry(files["xl/workbook.xml"]));
+  var sheet = wb.getElementsByTagName("sheet")[0];
+  if (!sheet) throw new Error("Planilha sem abas.");
+  var rid = sheet.getAttribute("r:id"), target = "worksheets/sheet1.xml";
+  var rels = files["xl/_rels/workbook.xml.rels"];
+  if (rels && rid){
+    Array.prototype.forEach.call(xml(await inflateEntry(rels)).getElementsByTagName("Relationship"), function(r){
+      if (r.getAttribute("Id") === rid) target = r.getAttribute("Target");
+    });
+  }
+  var path = target.charAt(0) === "/" ? target.slice(1) : "xl/" + target;
+  var ss = [];
+  if (files["xl/sharedStrings.xml"]){
+    Array.prototype.forEach.call(xml(await inflateEntry(files["xl/sharedStrings.xml"])).getElementsByTagName("si"), function(si){
+      ss.push(Array.prototype.map.call(si.getElementsByTagName("t"), function(t){ return t.textContent; }).join(""));
+    });
+  }
+  var sx = xml(await inflateEntry(files[path]));
+  var rows = [];
+  Array.prototype.forEach.call(sx.getElementsByTagName("row"), function(row){
+    var arr = [];
+    Array.prototype.forEach.call(row.getElementsByTagName("c"), function(c){
+      var t = c.getAttribute("t"), v = c.getElementsByTagName("v")[0], val = null;
+      if (t === "s") val = ss[+v.textContent];
+      else if (t === "inlineStr") val = Array.prototype.map.call(c.getElementsByTagName("t"), function(x){ return x.textContent; }).join("");
+      else if (v) val = (t === "str" || t === "e") ? v.textContent : Number(v.textContent);
+      arr[colIdx(c.getAttribute("r"))] = val;
+    });
+    rows.push(arr);
+  });
+  return rows;
+}
+function readCsv(text){
+  text = text.replace(/^﻿/, "");
+  var first = text.split(/\r?\n/)[0], sep = (first.split(";").length > first.split(",").length) ? ";" : ",";
+  var rows = [], row = [], cur = "", q = false;
+  for (var i = 0; i < text.length; i++){
+    var ch = text[i];
+    if (q){ if (ch === '"'){ if (text[i+1] === '"'){ cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === sep){ row.push(cur); cur = ""; }
+    else if (ch === "\n" || ch === "\r"){ if (ch === "\r" && text[i+1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
+    else cur += ch;
+  }
+  if (cur !== "" || row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+
+/* ---------- Interpretação das respostas ---------- */
+function normTxt(s){ return String(s == null ? "" : s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim(); }
+var CW = [/atendimento/, /populac/, /distancia/, /existencia/];
+function parseAnswer(text, k){
+  var t = normTxt(text);
+  if (!t) return {err:"sem resposta"};
+  var v = /extremamente/.test(t) ? 9 : /muito fortemente/.test(t) ? 7 : /fortemente/.test(t) ? 5 : /moderadamente/.test(t) ? 3 : /igual/.test(t) ? 1 : null;
+  if (v === null) return {err:"intensidade não reconhecida"};
+  if (v === 1) return {code:1};
+  var a = PAIRS[k][0], b = PAIRS[k][1];
+  var ia = t.search(CW[a]), ib = t.search(CW[b]);
+  if (ia < 0 && ib < 0) return {err:"critério não reconhecido"};
+  var fav = (ib < 0 || (ia >= 0 && ia < ib)) ? a : b;
+  return {code: fav === a ? v : -v};
+}
+function pad(n){ return (n<10?"0":"")+n; }
+function normTs(v){
+  if (v == null || v === "") return null;
+  if (typeof v === "number"){
+    var d = new Date(Math.round((v - 25569) * 86400000));
+    return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate())+" "+pad(d.getUTCHours())+":"+pad(d.getUTCMinutes());
+  }
+  var s = String(v).trim(), m;
+  if ((m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})[ T](\d{1,2}):(\d{2})(?::\d{2}(?:\.\d+)?)?\s*(AM|PM)?/i))){
+    var h = +m[4]; if (m[6]){ if (/pm/i.test(m[6]) && h < 12) h += 12; if (/am/i.test(m[6]) && h === 12) h = 0; }
+    return m[1]+"-"+pad(+m[2])+"-"+pad(+m[3])+" "+pad(h)+":"+m[5];
+  }
+  if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ ,]+(\d{1,2}):(\d{2})/))) return m[3]+"-"+pad(+m[2])+"-"+pad(+m[1])+" "+pad(+m[4])+":"+m[5];
+  return s;
+}
+function interpret(rows){
+  var hi = -1;
+  for (var i = 0; i < Math.min(rows.length, 20); i++){
+    if ((rows[i]||[]).some(function(c){ return /compara\w*\s*1\b/.test(normTxt(c)); })){ hi = i; break; }
+  }
+  if (hi < 0) throw new Error("Não encontrei as colunas “Comparação 1” a “Comparação 6” do formulário. Confira se a planilha é a de respostas da consulta.");
+  var head = rows[hi].map(normTxt), cols = [];
+  for (var k = 1; k <= 6; k++){
+    var re = new RegExp("compara\\w*\\s*"+k+"\\b"), c = head.findIndex(function(h){ return re.test(h); });
+    if (c < 0) throw new Error("Coluna “Comparação "+k+"” não encontrada.");
+    cols.push(c);
+  }
+  var cName = head.findIndex(function(h){ return /nome/.test(h); });
+  var cTs = head.findIndex(function(h){ return /carimbo|timestamp|data\/hora|data e hora/.test(h); });
+  var known = allExperts();
+  var out = [];
+  rows.slice(hi+1).forEach(function(r){
+    r = r || [];
+    if (cols.every(function(c){ return r[c] == null || String(r[c]).trim() === ""; })) return;
+    var rec = {who: cName >= 0 && r[cName] != null ? String(r[cName]).trim() : "(sem nome)", ts: cTs >= 0 ? normTs(r[cTs]) : null, errs:[], codes:[]};
+    cols.forEach(function(c, k){
+      var p = parseAnswer(r[c], k);
+      if (p.err) rec.errs.push("Comparação "+(k+1)+": "+p.err); else rec.codes.push(p.code);
+    });
+    if (rec.errs.length){ rec.status = "err"; out.push(rec); return; }
+    var dup = known.find(function(e){ return rec.ts && e.ts ? e.ts === rec.ts : e.codes.join() === rec.codes.join(); })
+           || out.find(function(o){ return o.status !== "err" && o.ts && o.ts === rec.ts; });
+    var M0 = matFromCodes(rec.codes), r0 = ahpW(M0), fx = improve(M0);
+    rec.cr0 = r0.cr; rec.cr1 = fx.cr; rec.w = fx.w; rec.M = fx.M; rec.fixed = fx.iters > 0;
+    rec.status = dup ? "dup" : (fx.cr > 0.10 ? "inc" : "new");
+    rec.dupOf = dup ? (dup.label || "linha repetida") : null;
+    rec.sel = rec.status === "new";
+    out.push(rec);
+  });
+  if (!out.length) throw new Error("A planilha não tem respostas preenchidas.");
+  return out;
+}
+
+/* ---------- Diálogo de importação ---------- */
+var impModal = document.getElementById("impModal"), impRecs = [], lastFocus = null;
+document.getElementById("btnImport").addEventListener("click", function(){ document.getElementById("fileImport").click(); });
+document.getElementById("fileImport").addEventListener("change", async function(){
+  var f = this.files && this.files[0]; this.value = "";
+  if (!f) return;
+  var body = document.getElementById("impBody");
+  openModal(); document.getElementById("impFile").textContent = f.name;
+  body.innerHTML = '<p class="sub">Lendo planilha…</p>'; document.getElementById("impOk").disabled = true;
+  try {
+    var rows = /\.csv$/i.test(f.name) ? readCsv(await f.text()) : await readXlsx(await f.arrayBuffer());
+    impRecs = interpret(rows);
+    renderImport();
+  } catch(e){
+    body.innerHTML = '<div class="alert err"><b>Não foi possível importar.</b> '+esc(e.message || e)+'</div>';
+    document.getElementById("impHint").textContent = "";
+  }
+});
+function openModal(){ lastFocus = document.activeElement; impModal.hidden = false; document.body.style.overflow = "hidden"; document.getElementById("impClose").focus(); }
+function closeModal(){ impModal.hidden = true; document.body.style.overflow = ""; impRecs = []; if (lastFocus) lastFocus.focus(); }
+["impClose","impCancel"].forEach(function(id){ document.getElementById(id).addEventListener("click", closeModal); });
+impModal.addEventListener("click", function(e){ if (e.target === impModal) closeModal(); });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !impModal.hidden) closeModal(); });
+
+function renderImport(){
+  var body = document.getElementById("impBody");
+  var BADGE = {new:'<span class="badge new">Nova</span>', dup:'<span class="badge dup">Já incluída</span>',
+               inc:'<span class="badge err">Inconsistente</span>', err:'<span class="badge err">Não reconhecida</span>'};
+  var h = '<div class="tbl-wrap" style="max-height:340px"><table class="imp-tbl"><thead><tr><th></th><th class="l">Data</th><th class="l">Respondente</th><th class="l">Situação</th><th>RC original</th><th>RC final</th><th>Atend.</th><th>Pop.</th><th>Dist.</th><th>GBM</th></tr></thead><tbody>';
+  impRecs.forEach(function(r, i){
+    var can = r.status !== "err";
+    h += '<tr class="'+(r.status==="dup"||r.status==="err"?"dis":"")+'"><td><input type="checkbox" data-i="'+i+'" '+(r.sel?"checked":"")+(can?"":" disabled")+' aria-label="Incluir resposta de '+esc(r.who)+'"></td>'+
+      '<td class="l">'+tsFmt(r.ts)+'</td><td class="l">'+esc(r.who)+'</td>'+
+      '<td class="l">'+BADGE[r.status]+(r.dupOf && r.status==="dup" ? ' <span class="sub">('+esc(r.dupOf)+')</span>' : '')+
+        (r.status==="err" ? ' <span class="sub">'+esc(r.errs.join("; "))+'</span>' : '')+'</td>'+
+      (r.status==="err" ? '<td colspan="6"></td>' :
+        '<td class="num">'+nf(r.cr0,3)+'</td><td class="num">'+nf(r.cr1,3)+(r.fixed?' <span class="badge fix" title="Ajustada pela melhoria de consistência do TCC">aj.</span>':'')+'</td>'+
+        r.w.map(function(x){ return '<td class="num">'+pct(x,1)+'</td>'; }).join(""))+'</tr>';
+  });
+  h += '</tbody></table></div><div id="impCmp"></div>'+
+    '<p class="imp-note">As respostas marcadas como “Já incluída” correspondem às do TCC ou a importações anteriores (mesma data e hora) e ficam desmarcadas para não contar duas vezes. Respostas com RC acima de 0,10 passam pela melhoria de consistência do TCC; se mesmo assim ficarem acima do limite, aparecem como “Inconsistente” e só entram se você marcar. O nome do respondente aparece só aqui e não é guardado.</p>';
+  body.innerHTML = h;
+  Array.prototype.forEach.call(body.querySelectorAll("input[type=checkbox]"), function(cb){
+    cb.addEventListener("change", function(){ impRecs[+cb.dataset.i].sel = cb.checked; renderImpCmp(); });
+  });
+  renderImpCmp();
+}
+function renderImpCmp(){
+  var sel = impRecs.filter(function(r){ return r.sel; });
+  var cur = groupAhp() || {w:[0,0,0,0], cr:0}, next = groupAhp(selExperts().concat(sel.map(function(r){ return {M:r.M}; })));
+  var names = ["Atendimentos","População","Distância","GBM"], order = [0,3,1,2];
+  document.getElementById("impCmp").innerHTML = '<div class="cmp">'+order.map(function(i){
+    var d = 100*(next.w[i]-cur.w[i]), cls = d > 0.005 ? "up" : (d < -0.005 ? "down" : "");
+    return '<div>'+names[i]+'<b>'+pct(cur.w[i])+' → '+pct(next.w[i])+'</b><span class="'+cls+'">'+(Math.abs(d)<0.005?"sem alteração":(d>0?"+":"")+nf(d,2)+" p.p.")+'</span></div>';
+  }).join("")+'</div><p class="imp-note">Grupo após a inclusão: '+(selExperts().length+sel.length)+' respostas marcadas · RC '+nf(next.cr,3)+(next.cr>0.10?' <b style="color:var(--red)">(acima de 0,10)</b>':'')+'. Os pesos dos controles serão arredondados para inteiros que somam 100%.</p>';
+  var ok = document.getElementById("impOk");
+  ok.disabled = !sel.length;
+  document.getElementById("impHint").textContent = sel.length ? sel.length+" resposta(s) selecionada(s)" : "Nenhuma resposta nova selecionada";
+}
+document.getElementById("impOk").addEventListener("click", function(){
+  var sel = impRecs.filter(function(r){ return r.sel; });
+  if (!sel.length) return;
+  sel.forEach(function(r){
+    state.experts.push({label:"Especialista "+(BASE_OBJ.length+state.experts.length+1), ts:r.ts, codes:r.codes, on:true});
+  });
+  closeModal();
+  applyAhp();
+  stEl.textContent = sel.length+" resposta(s) incluída(s); pesos recalculados"; stEl.className = "status ok";
+});
+
+/* ---------- Persistência ---------- */
+var stEl = document.getElementById("saveStatus"), stTimer = null;
+function save(){
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({rows:state.rows, raw:state.raw, w:state.w, mode:state.mode, experts:state.experts, baseOn:state.baseOn}));
+    stEl.textContent = "Alterações salvas neste navegador"; stEl.className = "status ok";
+  } catch(e){
+    stEl.textContent = "Salvamento local indisponível neste modo de abertura"; stEl.className = "status";
+  }
+  clearTimeout(stTimer); stTimer = setTimeout(function(){ stEl.textContent = ""; }, 2500);
+}
+function load(){
+  try {
+    var s = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (!s || !Array.isArray(s.rows)) return;
+    /* migração: versões anteriores tinham só as 35 RAs */
+    if (s.rows.length < INITIAL.length && s.rows.length === BASE_N){
+      for (var q = BASE_N; q < INITIAL.length; q++) s.rows.push({ra:INITIAL[q][0], atend:0, gbm:0, pop:0, dist:0});
+    }
+    if (s.rows.length !== INITIAL.length) return;
+    var okNames = s.rows.every(function(r, i){ return r && r.ra === INITIAL[i][0]; });
+    if (!okNames) return;
+    state.rows = s.rows.map(function(r){
+      var o = {ra:r.ra};
+      CRIT.forEach(function(c){ var v = r[c.key]; o[c.key] = (typeof v === "number" && isFinite(v) && v >= 0) ? v : null; });
+      return o;
+    });
+    state.raw = (s.raw && typeof s.raw === "object") ? s.raw : {};
+    var okW = s.w && CRIT.every(function(c){ var v = s.w[c.key]; return typeof v === "number" && v >= 0 && v <= 100 && Math.round(v) === v; });
+    if (okW && CRIT.reduce(function(t,c){ return t + s.w[c.key]; }, 0) <= 100){
+      CRIT.forEach(function(c){ state.w[c.key] = s.w[c.key]; });
+    }
+    if (s.mode === "bin" || s.mode === "qtd") state.mode = s.mode;
+    if (Array.isArray(s.experts)){
+      state.experts = s.experts.filter(function(e){
+        return e && Array.isArray(e.codes) && e.codes.length === 6 &&
+          e.codes.every(function(c){ return [1,3,5,7,9,-3,-5,-7,-9].indexOf(c) >= 0; });
+      }).map(function(e, i){ return {label:"Especialista "+(BASE_EXPERTS.length+i+1), ts:typeof e.ts === "string" ? e.ts : null, codes:e.codes, on:e.on !== false}; });
+    }
+    if (Array.isArray(s.baseOn) && s.baseOn.length === BASE_EXPERTS.length){
+      state.baseOn = s.baseOn.map(function(v){ return v !== false; });
+    }
+  } catch(e){ /* sem armazenamento: segue com os dados iniciais */ }
+}
+
+/* ---------- Utilitários ---------- */
+function flashCap(k){
+  var card = sliders[k].closest(".w"); card.classList.remove("capped"); void card.offsetWidth; card.classList.add("capped");
+}
+var BANDS = [
+  {n:"Muito alta", c:"#c1121f", bg:"#fdeced", grad:["#e2580c","#c1121f"]},
+  {n:"Alta",       c:"#e2580c", bg:"#fff1e7", grad:["#f2a516","#e2580c"]},
+  {n:"Moderada",   c:"#5f8bab", bg:"#eef4f8", grad:["#5f8bab","#5f8bab"]},
+  {n:"Baixa",      c:"#245d8a", bg:"#e5eff7", grad:["#245d8a","#245d8a"]}
+];
+function stamp(){
+  var d = new Date(), p = function(n){ return (n<10?"0":"")+n; };
+  return {txt: p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear()+" "+p(d.getHours())+":"+p(d.getMinutes()),
+          file: d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())};
+}
+function modeTxt(){ return state.mode === "bin" ? "binário (possui ou não GBM)" : "quantidade de GBMs multiemprego"; }
+function needRanking(){
+  if (!lastRes || lastRes.error){
+    alertBox("Não há ranking válido para exportar. Corrija os dados ou os pesos antes.");
+    return false;
+  }
+  return true;
+}
+function alertBox(msg){
+  rAlert.innerHTML = '<div class="alert err">'+esc(msg)+'</div>';
+  rAlert.scrollIntoView({behavior:"smooth", block:"center"});
+}
+/* Dentro do Claude (artefato publicado) os downloads passam pela capacidade "downloads"
+   e a impressão do navegador não está disponível; no arquivo local, usa-se o navegador. */
+var IN_ARTIFACT = !!(window.claude && typeof window.claude.use === "function");
+var dlCap = IN_ARTIFACT ? window.claude.use("downloads").catch(function(){ return null; }) : Promise.resolve(null);
+function download(blob, name){
+  if (!IN_ARTIFACT){
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 800);
+    return;
+  }
+  dlCap.then(function(dl){
+    if (!dl){ alertBox("O download não está disponível nesta visualização."); return; }
+    return dl.save({filename:name, data:blob}).then(function(){
+      stEl.textContent = "Arquivo salvo: "+name; stEl.className = "status ok";
+    }, function(e){
+      if (e && (e.code === "declined" || e.code === "rate_limited")) return;
+      alertBox("Não foi possível salvar o arquivo ("+((e && e.code) || "erro")+").");
+    });
+  });
+}
+/* Página HTML independente que abre a impressão sozinha (para salvar em PDF fora do Claude) */
+function standalone(title, bodyHtml){
+  var css = document.querySelector("style").textContent;
+  return "<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>"+esc(title)+"</title><style>"+css+
+    "#report{display:block!important}.utils,#obrasFilter,.ahp-actions,.step,.del,.ahp-on{display:none!important}</style></head><body class=\"snapshot\"><div class=\"wrap\">"+bodyHtml+
+    "</div><scr"+"ipt>window.addEventListener('load',function(){setTimeout(function(){window.print();},400);});</scr"+"ipt></body></html>";
+}
+function csvLine(cells){ return cells.map(function(x){ x = String(x); return /[;"\n]/.test(x) ? '"'+x.replace(/"/g,'""')+'"' : x; }).join(";"); }
+function dec(v){ return String(v).replace(".", ","); }
+
+function exportMatrixCSV(){
+  var lines = [csvLine(["Regiao Administrativa","Atendimentos","GBMs multiemprego na RA","Populacao","Distancia ao GBM mais proximo (km)"])];
+  state.rows.forEach(function(r, i){
+    lines.push(csvLine([r.ra].concat(CRIT.map(function(c){
+      if (state.raw[i+"|"+c.key] !== undefined) return "INVALIDO";
+      var v = r[c.key]; return v === null ? "" : dec(v);
+    }))));
+  });
+  download(new Blob(["﻿"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"}), "matriz_priorizacao_gbms_"+stamp().file+".csv");
+}
+function exportRankingCSV(){
+  if (!needRanking()) return;
+  var byRa = {}; state.rows.forEach(function(r){ byRa[r.ra] = r; });
+  var lines = [csvLine(["Posicao","Regiao Administrativa","Indice de prioridade","Faixa de prioridade","Atendimentos","GBMs multiemprego","Populacao","Distancia (km)","Posicao de referencia (TCC)"])];
+  lastRes.ranking.forEach(function(o){
+    var r = byRa[o.ra];
+    lines.push(csvLine([o.pos, o.ra, dec(o.ip.toFixed(4)), BANDS[bandOf(o.pos)].n, dec(r.atend), r.gbm, dec(r.pop), dec(r.dist), REF_POS[o.ra]]));
+  });
+  lines.push("");
+  lines.push(csvLine(["Pesos selecionados (%)", "Atendimentos "+state.w.atend, "GBMs "+state.w.gbm, "Populacao "+state.w.pop, "Distancia "+state.w.dist]));
+  lines.push(csvLine(["Criterio GBM", modeTxt()]));
+  lines.push(csvLine(["Gerado em", stamp().txt]));
+  download(new Blob(["﻿"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"}), "ranking_priorizacao_gbms_"+stamp().file+".csv");
+}
+
+function weightsTable(){
+  var h = '<table class="rw"><thead><tr><th class="l">Critério</th><th>Peso selecionado</th><th>Peso efetivo</th></tr></thead><tbody>';
+  CRIT.forEach(function(c){
+    h += '<tr><td class="l">'+c.label+'</td><td class="num">'+state.w[c.key]+'%</td><td class="num">'+nf(100*lastRes.eff[c.key],2)+'%</td></tr>';
+  });
+  return h + '</tbody></table>';
+}
+function printReport(){
+  if (!needRanking()) return;
+  var st = stamp();
+  var rk = document.getElementById("ranking").cloneNode(true); rk.removeAttribute("id");
+  document.getElementById("report").innerHTML =
+    '<div class="rh"><div><div class="kicker" style="color:var(--red)">CBMDF · Apoio à decisão</div>'+
+    '<h1>Ranking de prioridade das Regiões Administrativas para implantação de GBMs</h1></div>'+
+    '<div class="meta">Gerado em '+st.txt+'</div></div>'+
+    '<div class="tt">Parâmetros do cenário</div>'+ weightsTable()+
+    '<p class="cap2" style="margin-top:-6px">Critério GBM: '+modeTxt()+'. Pesos: '+(ahpApplied() ? 'obtidos pelo AHP com '+selExperts().length+' respostas de especialistas (RC do grupo '+nf(groupAhp().cr,3)+')' : 'ajustados manualmente a partir do AHP')+'.</p>'+
+    '<div class="tt">Ranking</div>'+
+    document.querySelector(".plegend").outerHTML + rk.outerHTML +
+    '<p class="cap2"><b>Fonte:</b> elaboração própria, com base em dados do CBMDF (GESINT e Matriz Operacional, BG nº 023/2026), do IPEDF (PDAD 2024) e do IBGE (setores censitários do Censo 2022).</p>'+
+    '<p class="cap2"><b>Nota:</b> índice de prioridade na escala de 0 a 100, obtido pela soma ponderada dos critérios normalizados pelo método Min-Max (normalização inversa para a quantidade de GBMs). A coluna Var. indica a variação de posição em relação ao cenário de referência do TCC (dados e pesos iniciais, critério GBM binário).</p>'+
+    (function(){
+      var sm = obrasSummary();
+      return '<div class="tt" style="margin-top:16px">Validação frente ao Plano de Obras 2025-2030 (prioridade muito alta)</div>'+
+        '<p class="cap2" style="margin:0 0 6px">Aderência: '+sm.inPlan.length+' de '+sm.top.length+' RAs sem GBM da faixa muito alta já constam do Plano de Obras'+
+        (sm.gaps.length ? '. Possíveis lacunas (faixas muito alta e alta): '+sm.gaps.map(function(o){ return esc(o.ra); }).join(", ")+'.' : '.')+'</p>'+
+        '<table class="ob"><thead><tr><th class="l">Pos.</th><th class="l">Região Administrativa</th><th>GBMs</th><th class="l">Situação no Plano de Obras</th><th class="l">Detalhe</th><th class="l">Leitura</th></tr></thead><tbody>'+
+        obrasRowsHTML(lastRes.ranking.filter(function(o){ return bandOf(o.pos) === 0; }))+'</tbody></table>'+
+        '<p class="cap2"><b>Fonte:</b> elaboração própria, com base no Plano de Obras 2025-2030 do CBMDF (COMAP, SEI 00053-00008114/2026-84).</p>';
+    })();
+  if (IN_ARTIFACT){
+    var html = standalone("Relatório do ranking", document.getElementById("report").outerHTML + document.querySelector(".credit").outerHTML);
+    download(new Blob([html], {type:"text/html"}), "relatorio_ranking_gbms_"+st.file+".html");
+    return;
+  }
+  document.body.classList.add("print-report");
+  setTimeout(function(){ window.print(); }, 50);
+}
+function printDashboard(){
+  if (IN_ARTIFACT){
+    var wrap = document.querySelector(".wrap").cloneNode(true);
+    /* congela os valores digitados e remove o que não faz sentido fora do painel */
+    var src = document.querySelectorAll(".wrap input"), dst = wrap.querySelectorAll("input");
+    Array.prototype.forEach.call(dst, function(el, i){
+      if (el.type === "checkbox"){ if (src[i].checked) el.setAttribute("checked", ""); else el.removeAttribute("checked"); }
+      else el.setAttribute("value", src[i].value);
+    });
+    ["#impModal", "#report", "#fileImport"].forEach(function(q){ var n = wrap.querySelector(q); if (n) n.remove(); });
+    download(new Blob([standalone("Painel de priorização de GBMs", wrap.innerHTML)], {type:"text/html"}), "dashboard_priorizacao_gbms_"+stamp().file+".html");
+    return;
+  }
+  document.body.classList.remove("print-report");
+  setTimeout(function(){ window.print(); }, 50);
+}
+if (IN_ARTIFACT){
+  var rb = document.querySelector('[data-exp="report"]'), db2 = document.querySelector('[data-exp="dash"]');
+  rb.innerHTML = 'Relatório do ranking (para PDF)<small>Baixa uma página que abre a impressão: escolha “Salvar como PDF”</small>';
+  db2.innerHTML = 'Dashboard completo (para PDF)<small>Baixa uma cópia da tela atual que abre a impressão</small>';
+}
+window.addEventListener("afterprint", function(){ document.body.classList.remove("print-report"); });
+
+function exportPNG(){
+  if (!needRanking()) return;
+  var R = lastRes.ranking, s = 2, W = 860, rowH = 26, top = 150, H = top + 34 + R.length*rowH + 80;
+  var cv = document.createElement("canvas"); cv.width = W*s; cv.height = H*s;
+  var g = cv.getContext("2d"); g.scale(s, s);
+  var F = getComputedStyle(document.body).fontFamily, M = 'Consolas,"Liberation Mono",monospace';
+  g.fillStyle = "#fff"; g.fillRect(0,0,W,H);
+  g.fillStyle = "#1e2124"; g.fillRect(0,0,W,70);
+  for (var x = -20; x < W; x += 28){ g.fillStyle = (x/28)%2 ? "#f2a516" : "#b3121b"; g.beginPath(); g.moveTo(x,70); g.lineTo(x+14,70); g.lineTo(x+20,64); g.lineTo(x+6,64); g.fill(); }
+  g.fillStyle = "#b3121b"; g.fillRect(0,64,W,0);
+  g.fillStyle = "#f2a516"; g.font = "600 11px "+F; g.fillText("CBMDF · APOIO À DECISÃO", 24, 24);
+  g.fillStyle = "#fff"; g.font = "600 17px "+F; g.fillText("Ranking de prioridade das RAs para implantação de GBMs", 24, 47);
+  var st = stamp();
+  g.fillStyle = "#585e65"; g.font = "12px "+F;
+  g.fillText("Pesos efetivos: Atendimentos "+nf(100*lastRes.eff.atend,2)+"% · GBMs "+nf(100*lastRes.eff.gbm,2)+"% · População "+nf(100*lastRes.eff.pop,2)+"% · Distância "+nf(100*lastRes.eff.dist,2)+"%", 24, 96);
+  g.fillText("Critério GBM: "+modeTxt()+" · Gerado em "+st.txt, 24, 114);
+  /* legenda */
+  var lx = 24; BANDS.forEach(function(b, i){
+    var t = b.n+" · "+bandRanges()[i];
+    g.font = "500 11px "+F; var tw = g.measureText(t).width + 26;
+    g.fillStyle = b.bg; rr(g, lx, 124, tw, 18, 9); g.fill();
+    g.fillStyle = b.c; g.beginPath(); g.arc(lx+10, 133, 4, 0, 7); g.fill(); g.fillText(t, lx+18, 137);
+    lx += tw + 6;
+  });
+  /* cabeçalho */
+  var cols = {pos:24, ra:70, bar:330, ip:560, at:660, gb:730, dv:800};
+  g.fillStyle = "#f7f8f9"; g.fillRect(16, top, W-32, 30);
+  g.fillStyle = "#585e65"; g.font = "600 11px "+F;
+  g.fillText("Pos.", cols.pos, top+19); g.fillText("Região Administrativa", cols.ra, top+19); g.fillText("Índice de prioridade", cols.bar, top+19);
+  g.textAlign = "right"; g.fillText("Atendimentos", cols.at+30, top+19); g.fillText("GBMs", cols.gb+20, top+19); g.fillText("Var.", cols.dv+30, top+19); g.textAlign = "left";
+  var d = decimalsFor(R), mx = Math.max(R[0].ip, 1e-9), y = top + 34;
+  R.forEach(function(o){
+    var b = BANDS[bandOf(o.pos)];
+    g.fillStyle = b.bg; g.fillRect(16, y, W-32, rowH-2);
+    g.fillStyle = b.c; g.fillRect(16, y, 4, rowH-2);
+    g.font = "700 12px "+M; g.fillText(o.pos+"º", cols.pos, y+17);
+    g.fillStyle = "#26292c"; g.font = "500 12.5px "+F; g.fillText(o.ra, cols.ra, y+17);
+    g.fillStyle = "rgba(0,0,0,.07)"; rr(g, cols.bar, y+9, 200, 7, 3.5); g.fill();
+    var gr = g.createLinearGradient(cols.bar,0,cols.bar+200,0); gr.addColorStop(0,b.grad[0]); gr.addColorStop(1,b.grad[1]);
+    g.fillStyle = gr; rr(g, cols.bar, y+9, Math.max(3, 200*o.ip/mx), 7, 3.5); g.fill();
+    g.fillStyle = "#26292c"; g.font = "12px "+M; g.textAlign = "right";
+    g.fillText(nf(o.ip, d), cols.ip+50, y+17);
+    g.fillText(fmtCell(o.atend, CRIT[0]), cols.at+30, y+17);
+    g.fillText(String(o.gbm), cols.gb+20, y+17);
+    var dv = REF_POS[o.ra] ? REF_POS[o.ra] - o.pos : 0;
+    g.fillStyle = dv>0 ? "#2f7d4f" : (dv<0 ? "#b3121b" : "#8a9097");
+    g.fillText(!REF_POS[o.ra] ? "nova" : (dv>0 ? "▲ "+dv : (dv<0 ? "▼ "+(-dv) : "=")), cols.dv+30, y+17);
+    g.textAlign = "left";
+    y += rowH;
+  });
+  g.fillStyle = "#585e65"; g.font = "11px "+F;
+  g.fillText("Fonte: elaboração própria, com dados do CBMDF (GESINT; Matriz Operacional, BG nº 023/2026), IPEDF (PDAD 2024) e IBGE (Censo 2022).", 24, y+22);
+  g.fillText("Nota: índice de 0 a 100 por soma ponderada Min-Max. Var.: variação de posição frente ao cenário de referência do TCC.", 24, y+40);
+  g.fillStyle = "#8a9097"; g.font = "italic 10.5px "+F;
+  g.fillText("Ferramenta derivada do TCC de Cap. QOBM/Comb. Matheus Castro de Carvalho (CAO/10, CBMDF, 2026).", 24, y+58);
+  cv.toBlob(function(blob){ download(blob, "ranking_priorizacao_gbms_"+st.file+".png"); }, "image/png");
+}
+function rr(g, x, y, w, h, r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+
+var expMenu = document.getElementById("expMenu");
+Array.prototype.forEach.call(expMenu.querySelectorAll("[data-exp]"), function(btn){
+  btn.addEventListener("click", function(){
+    expMenu.removeAttribute("open");
+    ({report:printReport, png:exportPNG, dash:printDashboard, rankcsv:exportRankingCSV, csv:exportMatrixCSV})[btn.dataset.exp]();
+  });
+});
+document.addEventListener("click", function(e){ if (!expMenu.contains(e.target)) expMenu.removeAttribute("open"); });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") expMenu.removeAttribute("open"); });
+var resetBtn = document.getElementById("btnReset"), armTimer = null;
+resetBtn.addEventListener("click", function(){
+  if (!resetBtn.classList.contains("danger-armed")){
+    resetBtn.classList.add("danger-armed"); resetBtn.textContent = "Clique de novo para confirmar";
+    armTimer = setTimeout(disarm, 3500); return;
+  }
+  disarm();
+  state = fresh();
+  try { localStorage.removeItem(STORE_KEY); } catch(e){}
+  buildMatrix(); refresh();
+});
+function disarm(){ clearTimeout(armTimer); resetBtn.classList.remove("danger-armed"); resetBtn.textContent = "Restaurar dados e pesos iniciais"; }
+
+/* ---------- Início ---------- */
+load();
+buildMatrix();
+refresh();
+window.__dash = {compute:compute, state:function(){ return state; }};
+})();
+</script>
+</body>
+</html>
