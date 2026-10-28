@@ -384,6 +384,7 @@
       <summary>Exportar <span aria-hidden="true">▾</span></summary>
       <div class="menu" role="menu">
         <h3>Para relatório técnico</h3>
+        <button type="button" role="menuitem" data-exp="full">Relatório completo (PDF)<small>Pesos, matriz, ranking e Plano de Obras completos, em A4</small></button>
         <button type="button" role="menuitem" data-exp="png">Ranking em imagem (PNG)<small>Para colar direto no Word ou em slides</small></button>
         <button type="button" role="menuitem" data-exp="pdf">Ranking em PDF<small>A mesma imagem do ranking em uma página A4</small></button>
         <h3>Dados</h3>
@@ -396,6 +397,7 @@
       <span class="tip" role="tooltip" id="btnExpHelpTip">
         <b>Exportar o cenário atual</b>
         <span>Gera arquivos com os dados, os pesos e o ranking que estão na tela neste momento.</span>
+        <span>Relatório completo (PDF): pesos, ranking, matriz de dados e validação frente ao Plano de Obras, em quadros padronizados e páginas A4 numeradas.</span>
         <span>Ranking em imagem (PNG) e Ranking em PDF trazem o mesmo quadro: pesos efetivos, critério GBM, ranking colorido por faixa, fonte e autoria. O PNG serve para colar no Word; o PDF sai em uma página A4.</span>
         <span>Ranking e Matriz em CSV abrem no Excel. Todos os arquivos levam a data e a hora no nome, para identificar cada cenário.</span>
       </span>
@@ -461,8 +463,8 @@
           <tr>
             <th class="l sticky">Região Administrativa</th>
             <th>Atendimentos</th>
-            <th>GBMs multiemprego na RA</th>
             <th>População</th>
+            <th>GBMs multiemprego na RA</th>
             <th>Distância ao GBM mais próximo (km)</th>
           </tr>
         </thead>
@@ -597,6 +599,8 @@ var INITIAL = [
   ["Ponte Alta",0,0,0,0],["26 de Setembro",0,0,0,0]
 ];
 var NEW_RAS = ["Ponte Alta","26 de Setembro"];
+/* ordem das colunas na matriz (os pesos mantêm a ordem de CRIT) */
+var MCOLS_KEYS = ["atend","pop","gbm","dist"];
 var BASE_N = 35;
 var CRIT = [
   {key:"atend", label:"Atendimentos", col:1, dir:+1, intOnly:false, thousands:true},
@@ -786,6 +790,7 @@ Array.prototype.forEach.call(wBox.querySelectorAll(".mode button"), function(b){
 /* ---------- Interface: matriz ---------- */
 var mBody = document.querySelector("#matrix tbody");
 var inputs = [], trs = [];
+var MCOLS = MCOLS_KEYS.map(function(k){ return critOf(k); });
 function paintPending(){ state.rows.forEach(function(r, i){ if (trs[i]){ var p = isPending(r); trs[i].classList.toggle("pending", p); trs[i].title = p ? "Aguardando dados: fora do cálculo" : ""; } }); }
 function buildMatrix(){
   mBody.innerHTML = ""; inputs = []; trs = [];
@@ -795,7 +800,7 @@ function buildMatrix(){
     if (NEW_RAS.indexOf(r.ra) >= 0){ var bd = document.createElement("span"); bd.className = "newra"; bd.textContent = "nova RA"; th.appendChild(bd); }
     tr.appendChild(th); trs.push(tr);
     var rowInputs = {};
-    CRIT.forEach(function(c){
+    MCOLS.forEach(function(c){
       var td = document.createElement("td");
       var inp = document.createElement("input");
       inp.type = "text"; inp.inputMode = c.intOnly ? "numeric" : "decimal"; inp.autocomplete = "off";
@@ -1451,9 +1456,9 @@ function csvLine(cells){ return cells.map(function(x){ x = String(x); return /[;
 function dec(v){ return String(v).replace(".", ","); }
 
 function exportMatrixCSV(){
-  var lines = [csvLine(["Regiao Administrativa","Atendimentos","GBMs multiemprego na RA","Populacao","Distancia ao GBM mais proximo (km)"])];
+  var lines = [csvLine(["Regiao Administrativa","Atendimentos","Populacao","GBMs multiemprego na RA","Distancia ao GBM mais proximo (km)"])];
   state.rows.forEach(function(r, i){
-    lines.push(csvLine([r.ra].concat(CRIT.map(function(c){
+    lines.push(csvLine([r.ra].concat(MCOLS.map(function(c){
       if (state.raw[i+"|"+c.key] !== undefined) return "INVALIDO";
       var v = r[c.key]; return v === null ? "" : dec(v);
     }))));
@@ -1463,10 +1468,10 @@ function exportMatrixCSV(){
 function exportRankingCSV(){
   if (!needRanking()) return;
   var byRa = {}; state.rows.forEach(function(r){ byRa[r.ra] = r; });
-  var lines = [csvLine(["Posicao","Regiao Administrativa","Indice de prioridade","Faixa de prioridade","Atendimentos","GBMs multiemprego","Populacao","Distancia (km)","Posicao de referencia (TCC)"])];
+  var lines = [csvLine(["Posicao","Regiao Administrativa","Indice de prioridade","Faixa de prioridade","Atendimentos","Populacao","GBMs multiemprego","Distancia (km)","Posicao de referencia (TCC)"])];
   lastRes.ranking.forEach(function(o){
     var r = byRa[o.ra];
-    lines.push(csvLine([o.pos, o.ra, dec(o.ip.toFixed(4)), BANDS[bandOf(o.pos)].n, dec(r.atend), r.gbm, dec(r.pop), dec(r.dist), REF_POS[o.ra]]));
+    lines.push(csvLine([o.pos, o.ra, dec(o.ip.toFixed(4)), BANDS[bandOf(o.pos)].n, dec(r.atend), dec(r.pop), r.gbm, dec(r.dist), REF_POS[o.ra]]));
   });
   lines.push("");
   lines.push(csvLine(["Pesos selecionados (%)", "Atendimentos "+state.w.atend, "GBMs "+state.w.gbm, "Populacao "+state.w.pop, "Distancia "+state.w.dist]));
@@ -1536,34 +1541,203 @@ function exportPNG(){
   var cv = rankingCanvas(), st = stamp();
   cv.toBlob(function(blob){ download(blob, "ranking_priorizacao_gbms_"+st.file+".png"); }, "image/png");
 }
-/* PDF de uma página A4 com a imagem do ranking (montado aqui mesmo, sem bibliotecas) */
+/* PDF de uma página A4 com a imagem do ranking */
 function exportPDF(){
   if (!needRanking()) return;
   var cv = rankingCanvas(), st = stamp();
-  var flat = document.createElement("canvas"); flat.width = cv.width; flat.height = cv.height;
-  var fg = flat.getContext("2d"); fg.fillStyle = "#fff"; fg.fillRect(0,0,flat.width,flat.height); fg.drawImage(cv,0,0);
-  flat.toBlob(function(jpg){
-    jpg.arrayBuffer().then(function(buf){
-      var img = new Uint8Array(buf), W = flat.width, H = flat.height;
-      var PW = 595.28, PH = 841.89, M = 28, sc = Math.min((PW-2*M)/W, (PH-2*M)/H);
-      var dw = W*sc, dh = H*sc, dx = (PW-dw)/2, dy = PH-M-dh;
-      var enc = new TextEncoder(), parts = [], off = 0, xref = [];
-      function add(x){ var b = typeof x === "string" ? enc.encode(x) : x; parts.push(b); off += b.length; }
-      function obj(n, body){ xref[n] = off; add(n+" 0 obj\n"); body(); add("\nendobj\n"); }
-      var content = "q "+dw.toFixed(2)+" 0 0 "+dh.toFixed(2)+" "+dx.toFixed(2)+" "+dy.toFixed(2)+" cm /Im0 Do Q";
-      add("%PDF-1.4\n");
-      obj(1, function(){ add("<< /Type /Catalog /Pages 2 0 R >>"); });
-      obj(2, function(){ add("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"); });
-      obj(3, function(){ add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+PW+" "+PH+"] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>"); });
-      obj(4, function(){ add("<< /Type /XObject /Subtype /Image /Width "+W+" /Height "+H+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+img.length+" >>\nstream\n"); add(img); add("\nendstream"); });
-      obj(5, function(){ add("<< /Length "+content.length+" >>\nstream\n"+content+"\nendstream"); });
-      obj(6, function(){ add("<< /Title (Ranking de prioridade - GBMs) /Producer (Painel de priorizacao de GBMs - CBMDF) >>"); });
-      var xo = off, x = "xref\n0 7\n0000000000 65535 f \n";
-      for (var i = 1; i <= 6; i++) x += String(xref[i]).padStart(10, "0")+" 00000 n \n";
-      add(x+"trailer\n<< /Size 7 /Root 1 0 R /Info 6 0 R >>\nstartxref\n"+xo+"\n%%EOF\n");
-      download(new Blob(parts, {type:"application/pdf"}), "ranking_priorizacao_gbms_"+st.file+".pdf");
+  canvasToJpeg(cv).then(function(pg){ pg.fit = true; download(pdfFromPages([pg]), "ranking_priorizacao_gbms_"+st.file+".pdf"); });
+}
+/* ---------- PDF: montagem sem bibliotecas (cada página é uma imagem JPEG) ---------- */
+function pdfFromPages(pages){
+  var enc = new TextEncoder(), parts = [], off = 0, xref = [];
+  var PW = 595.28, PH = 841.89, n = pages.length;
+  function add(x){ var b = typeof x === "string" ? enc.encode(x) : x; parts.push(b); off += b.length; }
+  function obj(k, body){ xref[k] = off; add(k+" 0 obj\n"); body(); add("\nendobj\n"); }
+  add("%PDF-1.4\n");
+  /* objetos: 1 catálogo, 2 páginas, 3 info; por página: página, imagem, conteúdo */
+  var kids = []; for (var i = 0; i < n; i++) kids.push((4+3*i)+" 0 R");
+  obj(1, function(){ add("<< /Type /Catalog /Pages 2 0 R >>"); });
+  obj(2, function(){ add("<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+n+" >>"); });
+  obj(3, function(){ add("<< /Title (Relatorio de priorizacao de GBMs) /Producer (Painel de priorizacao de GBMs - CBMDF) >>"); });
+  pages.forEach(function(pg, i){
+    var po = 4+3*i, io = po+1, co = po+2;
+    var sc = Math.min(PW/pg.W, PH/pg.H), dw = pg.W*sc, dh = pg.H*sc, dx = (PW-dw)/2, dy = (PH-dh)/2;
+    if (pg.fit){ var M = 28; sc = Math.min((PW-2*M)/pg.W, (PH-2*M)/pg.H); dw = pg.W*sc; dh = pg.H*sc; dx = (PW-dw)/2; dy = PH-M-dh; }
+    var content = "q "+dw.toFixed(2)+" 0 0 "+dh.toFixed(2)+" "+dx.toFixed(2)+" "+dy.toFixed(2)+" cm /Im"+i+" Do Q";
+    obj(po, function(){ add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+PW+" "+PH+"] /Resources << /XObject << /Im"+i+" "+io+" 0 R >> >> /Contents "+co+" 0 R >>"); });
+    obj(io, function(){ add("<< /Type /XObject /Subtype /Image /Width "+pg.W+" /Height "+pg.H+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+pg.img.length+" >>\nstream\n"); add(pg.img); add("\nendstream"); });
+    obj(co, function(){ add("<< /Length "+content.length+" >>\nstream\n"+content+"\nendstream"); });
+  });
+  var total = 3+3*n, xo = off, x = "xref\n0 "+(total+1)+"\n0000000000 65535 f \n";
+  for (var k = 1; k <= total; k++) x += String(xref[k]).padStart(10, "0")+" 00000 n \n";
+  add(x+"trailer\n<< /Size "+(total+1)+" /Root 1 0 R /Info 3 0 R >>\nstartxref\n"+xo+"\n%%EOF\n");
+  return new Blob(parts, {type:"application/pdf"});
+}
+function canvasToJpeg(cv){
+  return new Promise(function(res){
+    var flat = document.createElement("canvas"); flat.width = cv.width; flat.height = cv.height;
+    var g = flat.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0,0,flat.width,flat.height); g.drawImage(cv,0,0);
+    flat.toBlob(function(b){ b.arrayBuffer().then(function(buf){ res({img:new Uint8Array(buf), W:flat.width, H:flat.height}); }); }, "image/jpeg", 0.9);
+  });
+}
+
+/* ---------- Relatório completo em PDF ---------- */
+var RP = {W:595.28, H:841.89, S:2.6, M:40, top:64, bottom:46,
+  ink:"#26292c", ink2:"#585e65", ink3:"#8a9097", line:"#e1ded9", zebra:"#f7f6f4", head:"#2b2f33", red:"#b3121b", amber:"#f2a516", char:"#1e2124"};
+function reportPDF(){
+  if (!needRanking()) return;
+  var F = getComputedStyle(document.body).fontFamily, MONO = 'Consolas,"Liberation Mono",monospace';
+  var st = stamp(), pages = [], g = null, y = 0, pageNo = 0;
+  var CW = RP.W - 2*RP.M;
+  function newPage(){
+    var cv = document.createElement("canvas"); cv.width = Math.round(RP.W*RP.S); cv.height = Math.round(RP.H*RP.S);
+    g = cv.getContext("2d"); g.scale(RP.S, RP.S); g.fillStyle = "#fff"; g.fillRect(0,0,RP.W,RP.H);
+    pages.push(cv); pageNo++;
+    /* faixa de cabeçalho */
+    g.fillStyle = RP.char; g.fillRect(0,0,RP.W,38);
+    for (var x = -10; x < RP.W; x += 16){ g.fillStyle = (Math.round(x/16)%2) ? RP.amber : RP.red; g.beginPath(); g.moveTo(x,38); g.lineTo(x+8,38); g.lineTo(x+12,34); g.lineTo(x+4,34); g.fill(); }
+    g.fillStyle = RP.amber; g.font = "600 7.5px "+F; g.textBaseline = "alphabetic"; g.fillText("CBMDF · APOIO À DECISÃO", RP.M, 16);
+    g.fillStyle = "#fff"; g.font = "600 10px "+F; g.fillText("Relatório de priorização de RAs para novos GBMs", RP.M, 29);
+    g.textAlign = "right"; g.fillStyle = "#c9ccd0"; g.font = "8px "+F; g.fillText("Gerado em "+st.txt, RP.W-RP.M, 29); g.textAlign = "left";
+    y = RP.top;
+  }
+  function ensure(h){ if (y + h > RP.H - RP.bottom){ newPage(); return true; } return false; }
+  function wrap(text, font, w){
+    g.font = font; var words = String(text).split(/\s+/), lines = [], cur = "";
+    words.forEach(function(wd){ var t = cur ? cur+" "+wd : wd; if (g.measureText(t).width > w && cur){ lines.push(cur); cur = wd; } else cur = t; });
+    if (cur) lines.push(cur); return lines.length ? lines : [""];
+  }
+  function para(text, size, color, weight, gap){
+    var font = (weight||"400")+" "+size+"px "+F, lh = size*1.45, lines = wrap(text, font, CW);
+    lines.forEach(function(l){ ensure(lh); g.font = font; g.fillStyle = color || RP.ink2; g.fillText(l, RP.M, y + size); y += lh; });
+    y += (gap === undefined ? 4 : gap);
+  }
+  function section(num, title){
+    ensure(60); y += 6;
+    g.fillStyle = RP.red; g.fillRect(RP.M, y+1, 3, 13);
+    g.fillStyle = RP.ink; g.font = "700 12px "+F; g.fillText(num+". "+title, RP.M+9, y+12); y += 22;
+  }
+  function chip(x, yy, text, bg, fg){
+    g.font = "600 7px "+F; var w = g.measureText(text).width + 10;
+    g.fillStyle = bg; rr(g, x, yy, w, 12, 6); g.fill(); g.fillStyle = fg; g.fillText(text, x+5, yy+8.6); return w;
+  }
+  /* tabela padronizada: cabeçalho grafite, linhas zebradas, repetição do cabeçalho a cada página */
+  function table(caption, cols, rows, opt){
+    opt = opt || {};
+    var pad = 4, fs = opt.fs || 7.6, lh = fs*1.35, total = cols.reduce(function(a,c){ return a+c.w; },0);
+    cols.forEach(function(c){ c.px = c.w/total*CW; });
+    function header(cont){
+      ensure(lh+40);
+      g.fillStyle = RP.ink; g.font = "600 8.5px "+F; g.fillText(caption+(cont ? " (continuação)" : ""), RP.M, y+9); y += 14;
+      var hh = 0; cols.forEach(function(c){ hh = Math.max(hh, wrap(c.t, "600 "+fs+"px "+F, c.px-2*pad).length); });
+      var h = hh*lh + 2*pad + 1;
+      g.fillStyle = RP.head; g.fillRect(RP.M, y, CW, h);
+      var x = RP.M; g.fillStyle = "#fff";
+      cols.forEach(function(c){
+        wrap(c.t, "600 "+fs+"px "+F, c.px-2*pad).forEach(function(l, i){
+          g.font = "600 "+fs+"px "+F; g.textAlign = c.a === "r" ? "right" : "left";
+          g.fillText(l, c.a === "r" ? x+c.px-pad : x+pad, y+pad+fs+i*lh);
+        });
+        g.textAlign = "left"; x += c.px;
+      });
+      y += h;
+    }
+    header(false);
+    rows.forEach(function(r, ri){
+      var cells = cols.map(function(c){ var v = r.cells[cols.indexOf(c)]; return c.wrap ? wrap(v, (c.font||"400")+" "+fs+"px "+(c.mono?MONO:F), c.px-2*pad) : [String(v)]; });
+      var nl = Math.max.apply(null, cells.map(function(l){ return l.length; })), h = nl*lh + 2*pad;
+      if (y + h > RP.H - RP.bottom){ newPage(); header(true); }
+      g.fillStyle = r.bg || (ri % 2 ? RP.zebra : "#fff"); g.fillRect(RP.M, y, CW, h);
+      if (r.stripe){ g.fillStyle = r.stripe; g.fillRect(RP.M, y, 2.5, h); }
+      var x = RP.M;
+      cols.forEach(function(c, ci){
+        var col = (r.colors && r.colors[ci]) || (c.color) || RP.ink;
+        cells[ci].forEach(function(l, li){
+          if (r.chips && r.chips[ci]){ chip(x+pad, y+pad-1.5, l, r.chips[ci][0], r.chips[ci][1]); return; }
+          g.font = ((r.bold && r.bold[ci]) ? "700" : (c.font||"400"))+" "+fs+"px "+(c.mono?MONO:F); g.fillStyle = col;
+          g.textAlign = c.a === "r" ? "right" : "left";
+          g.fillText(l, c.a === "r" ? x+c.px-pad : x+pad, y+pad+fs-0.5+li*lh);
+        });
+        g.textAlign = "left"; x += c.px;
+      });
+      g.fillStyle = RP.line; g.fillRect(RP.M, y+h-0.5, CW, 0.5);
+      y += h;
     });
-  }, "image/jpeg", 0.92);
+    y += 5;
+    if (opt.note) opt.note.forEach(function(t){ para(t, 6.8, RP.ink3, "400", 1); });
+    y += 8;
+  }
+
+  var R = lastRes.ranking, ex = selExperts(), gAhp = groupAhp(), byRa = {};
+  state.rows.forEach(function(r){ byRa[r.ra] = r; });
+  var d = decimalsFor(R), BANDC = [["#fdeced","#c1121f"],["#fff1e7","#b84a0a"],["#eef4f8","#3f6a88"],["#e5eff7","#245d8a"]];
+  var FONTE = "Fonte: elaboração própria, com base em dados do CBMDF (GESINT; Matriz Operacional, BG nº 023/2026), do IPEDF (PDAD 2024) e do IBGE (Censo 2022).";
+
+  newPage();
+  g.fillStyle = RP.ink; var tl = wrap("Ranking de prioridade das Regiões Administrativas do Distrito Federal para implantação de novos Grupamentos de Bombeiro Militar", "700 16px "+F, CW);
+  tl.forEach(function(l){ g.font = "700 16px "+F; g.fillStyle = RP.ink; g.fillText(l, RP.M, y+16); y += 21; });
+  y += 4;
+  para("Relatório gerado pelo painel de priorização com os dados, os pesos e o critério GBM vigentes no momento da exportação. O índice de prioridade (0 a 100) resulta da soma ponderada dos quatro critérios normalizados pelo método Min-Max, com pesos obtidos pelo Processo Analítico Hierárquico (AHP).", 8.5, RP.ink2, "400", 10);
+
+  section(1, "Parâmetros do cenário");
+  var ahpTxt = gAhp ? "Pesos do AHP (grupo): "+ex.length+" respostas de especialistas no cálculo, razão de consistência "+nf(gAhp.cr,3)+"." : "Nenhuma resposta do AHP selecionada.";
+  table("Quadro 1 – Pesos dos critérios", [
+      {t:"Critério", w:46}, {t:"Peso selecionado", w:18, a:"r", mono:true}, {t:"Peso efetivo no cálculo", w:20, a:"r", mono:true}, {t:"Peso do AHP (grupo)", w:18, a:"r", mono:true}],
+    CRIT.map(function(c){ var ai = AO.indexOf(c.key);
+      return {cells:[c.label, state.w[c.key]+"%", nf(100*lastRes.eff[c.key],2)+"%", gAhp ? nf(100*gAhp.w[ai],2)+"%" : "–"]}; }),
+    {note:["Critério GBM: "+modeTxt()+". "+ahpTxt+" "+(ahpApplied() ? "Os pesos selecionados correspondem aos do AHP, arredondados a inteiros." : "Os pesos selecionados foram ajustados manualmente a partir do AHP.")]});
+
+  section(2, "Ranking de prioridade");
+  var rg = bandRanges(), lx = RP.M; ensure(20);
+  ["Muito alta","Alta","Moderada","Baixa"].forEach(function(nm, i){ lx += chip(lx, y, nm+" · "+rg[i], BANDC[i][0], BANDC[i][1]) + 5; });
+  y += 20;
+  table("Quadro 2 – Ranking de prioridade das RAs", [
+      {t:"Pos.", w:7, font:"700", mono:true}, {t:"Região Administrativa", w:30}, {t:"Índice de prioridade", w:15, a:"r", mono:true},
+      {t:"Faixa", w:13}, {t:"Atendimentos", w:13, a:"r", mono:true}, {t:"GBMs", w:8, a:"r", mono:true}, {t:"Var.*", w:9, a:"r", mono:true}],
+    R.map(function(o){ var b = bandOf(o.pos), ref = REF_POS[o.ra], dv = ref ? ref - o.pos : 0;
+      return {cells:[o.pos+"º", o.ra, nf(o.ip,d), BANDS[b].n, fmtCell(o.atend, CRIT[0]), o.gbm, !ref ? "nova" : (dv>0 ? "▲ "+dv : (dv<0 ? "▼ "+(-dv) : "="))],
+              bg: BANDC[b][0], stripe: BANDC[b][1], colors:[BANDC[b][1], null, null, BANDC[b][1], null, null, dv>0 ? "#2f7d4f" : (dv<0 ? RP.red : RP.ink3)], bold:[true]}; }),
+    {note:[FONTE, "Nota: índice de 0 a 100. * Variação de posição frente ao cenário de referência do TCC (dados e pesos iniciais, critério GBM binário)."+(lastRes.pending.length ? " RAs aguardando dados, fora do cálculo: "+lastRes.pending.map(function(r){ return r.ra; }).join(", ")+"." : "")]});
+
+  section(3, "Matriz de dados");
+  table("Quadro 3 – Dados por Região Administrativa", [
+      {t:"Região Administrativa", w:34}, {t:"Atendimentos", w:15, a:"r", mono:true}, {t:"População", w:16, a:"r", mono:true},
+      {t:"GBMs multiemprego na RA", w:16, a:"r", mono:true}, {t:"Distância ao GBM mais próximo (km)", w:19, a:"r", mono:true}],
+    state.rows.map(function(r){ var p = isPending(r);
+      return {cells:[r.ra+(p ? " (aguardando dados)" : ""), fmtCell(r.atend, CRIT[0]), fmtCell(r.pop, CRIT[2]), r.gbm === null ? "" : r.gbm, fmtCell(r.dist, CRIT[3])],
+              colors: p ? [RP.ink3, RP.ink3, RP.ink3, RP.ink3, RP.ink3] : null}; }),
+    {note:["Fonte: atendimentos de 2025 (GESINT/CBMDF); população (PDAD 2024/IPEDF); quantidade de GBMs multiemprego (Matriz Operacional, BG nº 023/2026); distância viária do centroide ponderado pela densidade populacional ao GBM mais próximo (QGIS)."]});
+
+  section(4, "Validação frente ao Plano de Obras 2025-2030");
+  var sm = obrasSummary(), pctA = sm.top.length ? Math.round(100*sm.inPlan.length/sm.top.length) : 0;
+  para("Aderência: "+sm.inPlan.length+" de "+sm.top.length+" RAs sem GBM da faixa muito alta já constam do Plano de Obras ("+pctA+"%). Possíveis lacunas nas faixas muito alta e alta: "+(sm.gaps.length ? sm.gaps.map(function(o){ return o.ra+" ("+o.pos+"º)"; }).join(", ") : "nenhuma")+".", 8.2, RP.ink, "400", 8);
+  var STC = {1:["#e3f1e8","#25683f"], 2:["#fff2d9","#8a5200"], 3:["#eeeaf7","#594a91"], 4:["#e5eff7","#245d8a"], 5:["#f0f0f0","#6b7076"]};
+  table("Quadro 4 – Situação de cada RA no Plano de Obras 2025-2030", [
+      {t:"Pos.", w:6, font:"700", mono:true}, {t:"Região Administrativa", w:18}, {t:"GBMs", w:5, a:"r", mono:true},
+      {t:"Situação no Plano", w:24}, {t:"Detalhe", w:33, wrap:true}, {t:"Leitura", w:14}],
+    R.map(function(o){ var b = bandOf(o.pos), ob = obraOf(o.ra), rd = readingOf(o);
+      var rc = rd.c === "ok" ? "#2f7d4f" : rd.c === "gap" ? RP.red : rd.c === "ref" ? "#8a5200" : RP.ink3;
+      return {cells:[o.pos+"º", o.ra, o.gbm, ST[ob.s], ob.d, rd.t.replace("✓ ","").replace("! ","")], stripe: BANDC[b][1],
+              colors:[BANDC[b][1], null, null, null, RP.ink2, rc], chips:{3:STC[ob.s]}, bold:[true,false,false,false,false,rd.c==="gap"]}; }),
+    {fs:7.2, note:["Fonte: elaboração própria, com base no Plano de Obras 2025-2030 do CBMDF (COMAP).",
+      "Leitura: Convergente = RA sem GBM nas faixas muito alta ou alta com unidade prevista, em licitação ou em obra; Possível lacuna = RA sem GBM nessas faixas sem unidade no Plano; Reforço = RA com GBM na faixa muito alta. Não foram associados a uma RA o 5º GBM (Aeroporto) e o 26º GBM (BR 070)."]});
+
+  ensure(70); y += 6;
+  g.fillStyle = RP.line; g.fillRect(RP.M, y, CW, 0.6); y += 10;
+  para("Origem e autoria: ferramenta derivada do Trabalho de Conclusão de Curso do Cap. QOBM/Comb. Matheus Castro de Carvalho (CAO/10, CBMDF, 2026), sob orientação do Maj. QOBM/Comb. Hugo Batista Gomes. CARVALHO, M. C. de. Subsídios para o plano de expansão do CBMDF: um modelo multicritério para priorização de novas unidades operacionais no Distrito Federal. 2026.", 7.2, RP.ink2, "400", 0);
+
+  /* rodapés com numeração */
+  pages.forEach(function(cv, i){
+    var c = cv.getContext("2d");
+    c.fillStyle = RP.line; c.fillRect(RP.M, RP.H-30, CW, 0.5);
+    c.fillStyle = RP.ink3; c.font = "7px "+F; c.textAlign = "left";
+    c.fillText("Painel de priorização de GBMs · TCC CAO/10 · Cap. QOBM/Comb. Matheus Castro de Carvalho", RP.M, RP.H-19);
+    c.textAlign = "right"; c.fillText("Página "+(i+1)+" de "+pages.length, RP.W-RP.M, RP.H-19); c.textAlign = "left";
+  });
+  stEl.textContent = "Gerando relatório em PDF…"; stEl.className = "status";
+  Promise.all(pages.map(canvasToJpeg)).then(function(list){
+    download(pdfFromPages(list), "relatorio_priorizacao_gbms_"+st.file+".pdf");
+  });
 }
 function rankingCanvas(){
   var R = lastRes.ranking, s = 2, W = 860, rowH = 26, top = 150, H = top + 34 + R.length*rowH + 80;
@@ -1627,7 +1801,7 @@ var expMenu = document.getElementById("expMenu");
 Array.prototype.forEach.call(expMenu.querySelectorAll("[data-exp]"), function(btn){
   btn.addEventListener("click", function(){
     expMenu.removeAttribute("open");
-    ({png:exportPNG, pdf:exportPDF, rankcsv:exportRankingCSV, csv:exportMatrixCSV})[btn.dataset.exp]();
+    ({full:reportPDF, png:exportPNG, pdf:exportPDF, rankcsv:exportRankingCSV, csv:exportMatrixCSV})[btn.dataset.exp]();
   });
 });
 document.addEventListener("click", function(e){ if (!expMenu.contains(e.target)) expMenu.removeAttribute("open"); });
