@@ -944,26 +944,26 @@ function refresh(){
 var ST = {1:"Em construção", 2:"Priorizada no ciclo 2025-2030", 3:"Reforma prevista", 4:"Unidade prevista", 5:"Não consta"};
 /* s = situação; nova = há unidade nova prevista/em licitação/em obra para a RA; d = detalhe */
 var OBRAS = {
-  "Sol Nascente e Pôr do Sol": {s:1, nova:true,  d:"42º GBM tipo C: obra em andamento (seção 5.2)."},
-  "Jardim Botânico":           {s:2, nova:true,  d:"33º GBM tipo C: em desenvolvimento (seção 4.8)."},
-  "SCIA":                      {s:2, nova:true,  d:"40º GBM tipo C (Estrutural/SCIA): em licitação (seção 4.9)."},
-  "Plano Piloto":              {s:2, nova:true,  d:"43º GBM tipo C (Setor de Rádio e TV Sul): em licitação (4.10); reforma geral do 1º GBM (4.4)."},
-  "Gama":                      {s:3, nova:true,  d:"Reforma geral do 16º GBM (4.5); 27º (Gama Oeste) e 28º (Gama Sul) previstos no Quadro 1."},
-  "Vicente Pires":             {s:4, nova:true,  d:"50º GBM tipo C previsto (Quadro 1); sem obra no ciclo."},
-  "Sobradinho II":             {s:4, nova:true,  d:"44º GBM previsto; 29º GBM (Grande Colorado) previsto (Quadro 1)."},
-  "Riacho Fundo II":           {s:4, nova:true,  d:"23º GBM previsto (Quadro 1); sem obra no ciclo."},
-  "Park Way":                  {s:4, nova:true,  d:"35º GBM previsto (Quadro 1); sem obra no ciclo."},
-  "Itapoã":                    {s:4, nova:true,  d:"32º GBM previsto (Quadro 1); sem obra no ciclo."},
-  "Arniqueira":                {s:4, nova:true,  d:"24º GBM previsto (Quadro 1); sem obra no ciclo."},
-  "Cruzeiro":                  {s:4, nova:true,  d:"14º GBM previsto (Quadro 1); sem obra no ciclo."},
-  "Recanto das Emas":          {s:4, nova:true,  d:"20º GBM previsto (Quadro 1); 36º GBM construído."},
-  "Santa Maria":               {s:4, nova:true,  d:"38º GBM (Santa Maria Sul) previsto (Quadro 1)."},
-  "SIA":                       {s:4, nova:true,  d:"39º GBM (SIA Norte) previsto (Quadro 1)."},
-  "Taguatinga":                {s:4, nova:true,  d:"46º (Taguatinga Sul) e 47º (Taguatinga Norte) previstos (Quadro 1)."},
-  "Guará":                     {s:4, nova:true,  d:"30º GBM (Guará II) previsto (Quadro 1)."},
-  "Planaltina":                {s:4, nova:true,  d:"48º GBM (Vale do Amanhecer) previsto (Quadro 1)."},
-  "Brazlândia":                {s:4, nova:true,  d:"31º GBM (INCRA VIII) previsto (Quadro 1)."},
-  "Varjão":                    {s:5, nova:false, d:"Sem obra prevista. O Quadro 1 registra o 49º GBM como construído."}
+  "Sol Nascente e Pôr do Sol": {s:1, nova:true,  d:"42º GBM tipo C: obra em andamento."},
+  "Jardim Botânico":           {s:2, nova:true,  d:"33º GBM tipo C: em desenvolvimento."},
+  "SCIA":                      {s:2, nova:true,  d:"40º GBM tipo C (Estrutural/SCIA): em licitação."},
+  "Plano Piloto":              {s:2, nova:true,  d:"43º GBM tipo C (Setor de Rádio e TV Sul): em licitação; reforma geral do 1º GBM."},
+  "Gama":                      {s:3, nova:true,  d:"Reforma geral do 16º GBM; 27º (Gama Oeste) e 28º (Gama Sul) previstos."},
+  "Vicente Pires":             {s:4, nova:true,  d:"50º GBM tipo C previsto; sem obra no ciclo."},
+  "Sobradinho II":             {s:4, nova:true,  d:"44º GBM e 29º GBM (Grande Colorado) previstos."},
+  "Riacho Fundo II":           {s:4, nova:true,  d:"23º GBM previsto; sem obra no ciclo."},
+  "Park Way":                  {s:4, nova:true,  d:"35º GBM previsto; sem obra no ciclo."},
+  "Itapoã":                    {s:4, nova:true,  d:"32º GBM previsto; sem obra no ciclo."},
+  "Arniqueira":                {s:4, nova:true,  d:"24º GBM previsto; sem obra no ciclo."},
+  "Cruzeiro":                  {s:4, nova:true,  d:"14º GBM previsto; sem obra no ciclo."},
+  "Recanto das Emas":          {s:4, nova:true,  d:"20º GBM previsto; 36º GBM construído."},
+  "Santa Maria":               {s:4, nova:true,  d:"38º GBM (Santa Maria Sul) previsto."},
+  "SIA":                       {s:4, nova:true,  d:"39º GBM (SIA Norte) previsto."},
+  "Taguatinga":                {s:4, nova:true,  d:"46º (Taguatinga Sul) e 47º (Taguatinga Norte) previstos."},
+  "Guará":                     {s:4, nova:true,  d:"30º GBM (Guará II) previsto."},
+  "Planaltina":                {s:4, nova:true,  d:"48º GBM (Vale do Amanhecer) previsto."},
+  "Brazlândia":                {s:4, nova:true,  d:"31º GBM (INCRA VIII) previsto."},
+  "Varjão":                    {s:5, nova:false, d:"Sem obra prevista. O Plano registra o 49º GBM como construído."}
 };
 function obraOf(ra){ return OBRAS[ra] || {s:5, nova:false, d:"Sem unidade nova ou intervenção prevista."}; }
 var obrasFilter = "all";
