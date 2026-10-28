@@ -384,9 +384,8 @@
       <summary>Exportar <span aria-hidden="true">▾</span></summary>
       <div class="menu" role="menu">
         <h3>Para relatório técnico</h3>
-        <button type="button" role="menuitem" data-exp="report">Relatório do ranking (PDF)<small>Pesos, ranking colorido, data e fontes; escolha “Salvar como PDF”</small></button>
-        <button type="button" role="menuitem" data-exp="png">Ranking em imagem (PNG)<small>Para colar direto no Word</small></button>
-        <button type="button" role="menuitem" data-exp="dash">Dashboard completo (PDF)<small>Pesos, matriz e ranking como estão na tela</small></button>
+        <button type="button" role="menuitem" data-exp="png">Ranking em imagem (PNG)<small>Para colar direto no Word ou em slides</small></button>
+        <button type="button" role="menuitem" data-exp="pdf">Ranking em PDF<small>A mesma imagem do ranking em uma página A4</small></button>
         <h3>Dados</h3>
         <button type="button" role="menuitem" data-exp="rankcsv">Ranking em planilha (CSV)<small>Posição, índice, faixa e critérios</small></button>
         <button type="button" role="menuitem" data-exp="csv">Matriz de dados (CSV)<small>Os valores editáveis de todas as RAs</small></button>
@@ -397,7 +396,7 @@
       <span class="tip" role="tooltip" id="btnExpHelpTip">
         <b>Exportar o cenário atual</b>
         <span>Gera arquivos com os dados, os pesos e o ranking que estão na tela neste momento.</span>
-        <span>Relatório do ranking: pesos, ranking colorido, validação frente ao Plano de Obras, fontes e autoria, pronto para salvar em PDF. Ranking em imagem: PNG para colar no Word. Dashboard completo: cópia da tela inteira em PDF.</span>
+        <span>Ranking em imagem (PNG) e Ranking em PDF trazem o mesmo quadro: pesos efetivos, critério GBM, ranking colorido por faixa, fonte e autoria. O PNG serve para colar no Word; o PDF sai em uma página A4.</span>
         <span>Ranking e Matriz em CSV abrem no Excel. Todos os arquivos levam a data e a hora no nome, para identificar cada cenário.</span>
       </span>
     </span>
@@ -1530,15 +1529,43 @@ function printDashboard(){
   document.body.classList.remove("print-report");
   setTimeout(function(){ window.print(); }, 50);
 }
-if (IN_ARTIFACT){
-  var rb = document.querySelector('[data-exp="report"]'), db2 = document.querySelector('[data-exp="dash"]');
-  rb.innerHTML = 'Relatório do ranking (para PDF)<small>Baixa uma página que abre a impressão: escolha “Salvar como PDF”</small>';
-  db2.innerHTML = 'Dashboard completo (para PDF)<small>Baixa uma cópia da tela atual que abre a impressão</small>';
-}
 window.addEventListener("afterprint", function(){ document.body.classList.remove("print-report"); });
 
 function exportPNG(){
   if (!needRanking()) return;
+  var cv = rankingCanvas(), st = stamp();
+  cv.toBlob(function(blob){ download(blob, "ranking_priorizacao_gbms_"+st.file+".png"); }, "image/png");
+}
+/* PDF de uma página A4 com a imagem do ranking (montado aqui mesmo, sem bibliotecas) */
+function exportPDF(){
+  if (!needRanking()) return;
+  var cv = rankingCanvas(), st = stamp();
+  var flat = document.createElement("canvas"); flat.width = cv.width; flat.height = cv.height;
+  var fg = flat.getContext("2d"); fg.fillStyle = "#fff"; fg.fillRect(0,0,flat.width,flat.height); fg.drawImage(cv,0,0);
+  flat.toBlob(function(jpg){
+    jpg.arrayBuffer().then(function(buf){
+      var img = new Uint8Array(buf), W = flat.width, H = flat.height;
+      var PW = 595.28, PH = 841.89, M = 28, sc = Math.min((PW-2*M)/W, (PH-2*M)/H);
+      var dw = W*sc, dh = H*sc, dx = (PW-dw)/2, dy = PH-M-dh;
+      var enc = new TextEncoder(), parts = [], off = 0, xref = [];
+      function add(x){ var b = typeof x === "string" ? enc.encode(x) : x; parts.push(b); off += b.length; }
+      function obj(n, body){ xref[n] = off; add(n+" 0 obj\n"); body(); add("\nendobj\n"); }
+      var content = "q "+dw.toFixed(2)+" 0 0 "+dh.toFixed(2)+" "+dx.toFixed(2)+" "+dy.toFixed(2)+" cm /Im0 Do Q";
+      add("%PDF-1.4\n");
+      obj(1, function(){ add("<< /Type /Catalog /Pages 2 0 R >>"); });
+      obj(2, function(){ add("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"); });
+      obj(3, function(){ add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+PW+" "+PH+"] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>"); });
+      obj(4, function(){ add("<< /Type /XObject /Subtype /Image /Width "+W+" /Height "+H+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+img.length+" >>\nstream\n"); add(img); add("\nendstream"); });
+      obj(5, function(){ add("<< /Length "+content.length+" >>\nstream\n"+content+"\nendstream"); });
+      obj(6, function(){ add("<< /Title (Ranking de prioridade - GBMs) /Producer (Painel de priorizacao de GBMs - CBMDF) >>"); });
+      var xo = off, x = "xref\n0 7\n0000000000 65535 f \n";
+      for (var i = 1; i <= 6; i++) x += String(xref[i]).padStart(10, "0")+" 00000 n \n";
+      add(x+"trailer\n<< /Size 7 /Root 1 0 R /Info 6 0 R >>\nstartxref\n"+xo+"\n%%EOF\n");
+      download(new Blob(parts, {type:"application/pdf"}), "ranking_priorizacao_gbms_"+st.file+".pdf");
+    });
+  }, "image/jpeg", 0.92);
+}
+function rankingCanvas(){
   var R = lastRes.ranking, s = 2, W = 860, rowH = 26, top = 150, H = top + 34 + R.length*rowH + 80;
   var cv = document.createElement("canvas"); cv.width = W*s; cv.height = H*s;
   var g = cv.getContext("2d"); g.scale(s, s);
@@ -1592,7 +1619,7 @@ function exportPNG(){
   g.fillText("Nota: índice de 0 a 100 por soma ponderada Min-Max. Var.: variação de posição frente ao cenário de referência do TCC.", 24, y+40);
   g.fillStyle = "#8a9097"; g.font = "italic 10.5px "+F;
   g.fillText("Ferramenta derivada do TCC de Cap. QOBM/Comb. Matheus Castro de Carvalho (CAO/10, CBMDF, 2026).", 24, y+58);
-  cv.toBlob(function(blob){ download(blob, "ranking_priorizacao_gbms_"+st.file+".png"); }, "image/png");
+  return cv;
 }
 function rr(g, x, y, w, h, r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
 
@@ -1600,7 +1627,7 @@ var expMenu = document.getElementById("expMenu");
 Array.prototype.forEach.call(expMenu.querySelectorAll("[data-exp]"), function(btn){
   btn.addEventListener("click", function(){
     expMenu.removeAttribute("open");
-    ({report:printReport, png:exportPNG, dash:printDashboard, rankcsv:exportRankingCSV, csv:exportMatrixCSV})[btn.dataset.exp]();
+    ({png:exportPNG, pdf:exportPDF, rankcsv:exportRankingCSV, csv:exportMatrixCSV})[btn.dataset.exp]();
   });
 });
 document.addEventListener("click", function(e){ if (!expMenu.contains(e.target)) expMenu.removeAttribute("open"); });
