@@ -80,8 +80,9 @@
   .w-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
   .w label{font-weight:600;font-size:13px}
   .w .val{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--ink)}
-  .w .eff{font-size:12px;color:var(--ink-2);margin-top:2px}
-  .w .eff b{font-family:var(--mono);color:var(--red);font-weight:600}
+  .w .eff{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:7px 10px;border-radius:8px;background:var(--red-soft);border:1px solid var(--red-line)}
+  .w .eff span{font-size:11.5px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+  .w .eff b{font-family:var(--mono);color:var(--red);font-weight:700;font-size:18px;line-height:1}
   input[type=range]{width:100%;margin:10px 0 2px;accent-color:var(--red);height:28px;cursor:pointer;touch-action:pan-y}
   .scale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3)}
   .mode{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin-top:10px}
@@ -604,8 +605,8 @@ var MCOLS_KEYS = ["atend","pop","gbm","dist"];
 var BASE_N = 35;
 var CRIT = [
   {key:"atend", label:"Atendimentos", col:1, dir:+1, intOnly:false, thousands:true},
-  {key:"gbm",   label:"GBMs multiemprego na RA", col:2, dir:-1, intOnly:true, thousands:true},
-  {key:"pop",   label:"População", col:3, dir:+1, intOnly:false, thousands:true},
+  {key:"pop",   label:"População", col:2, dir:+1, intOnly:false, thousands:true},
+  {key:"gbm",   label:"GBMs multiemprego na RA", col:3, dir:-1, intOnly:true, thousands:true},
   {key:"dist",  label:"Distância ao GBM mais próximo", col:4, dir:+1, intOnly:false, thousands:false}
 ];
 var W0 = {atend:47, gbm:26, pop:14, dist:13};
@@ -738,7 +739,7 @@ CRIT.forEach(function(c){
     '<div class="rwrap"><input type="range" id="'+id+'" min="0" max="100" step="1" aria-describedby="'+id+'_e">'+
     '<div class="scale"><span>0%</span><span>50%</span><span>100%</span></div></div>'+
     '<button type="button" class="step" data-d="1" aria-label="Aumentar '+c.label+' em 1 ponto">+</button></div>'+
-    '<div class="eff" id="'+id+'_e">Peso efetivo: <b>–</b></div>';
+    '<div class="eff" id="'+id+'_e"><span>Peso em uso no cálculo</span><b>–</b></div>';
   if (c.key === "gbm"){
     d.innerHTML +=
       '<div class="moderow"><div class="mode" role="group" aria-label="Modo do critério GBM">'+
@@ -1099,24 +1100,24 @@ function renderAhp(){
   var nImp = sel.filter(function(e){ return e.imported; }).length, nTcc = sel.length - nImp;
   document.getElementById("ahpSum").innerHTML = g
     ? sel.length+" de "+ex.length+" respostas no cálculo ("+nTcc+" do TCC"+(nImp ? " + "+nImp+" importada"+(nImp>1?"s":"") : "")+") · RC do grupo "+nf(g.cr,3)+
-      " · Atend. "+pct(g.w[0])+" · GBM "+pct(g.w[3])+" · Pop. "+pct(g.w[1])+" · Dist. "+pct(g.w[2])+
+      " · Atend. "+pct(g.w[0])+" · Pop. "+pct(g.w[1])+" · GBM "+pct(g.w[3])+" · Dist. "+pct(g.w[2])+
       (applied ? '<span class="tag ok">Pesos do AHP aplicados</span>' : '<span class="tag man">Pesos ajustados manualmente</span>')
     : '<span class="tag man">Nenhuma resposta selecionada</span> Marque ao menos uma resposta para calcular os pesos do AHP; os controles mantêm os valores atuais.';
   document.getElementById("btnApplyAhp").disabled = applied || !g;
   var box = document.getElementById("ahpList"), tg = document.getElementById("btnAhpToggle");
   box.hidden = !ahpOpen; tg.setAttribute("aria-expanded", String(ahpOpen));
   tg.textContent = ahpOpen ? "Ocultar respostas" : "Mostrar respostas ("+ex.length+")";
-  var h = '<div class="tbl-wrap" style="max-height:none"><table class="ahp-tbl"><thead><tr><th class="l" style="width:34px"><span class="sr">No cálculo</span></th><th class="l">Resposta</th><th class="l">Origem</th><th>RC original</th><th>RC final</th><th>Atend.</th><th>Pop.</th><th>Dist.</th><th>GBM</th><th style="width:40px"></th></tr></thead><tbody>';
+  var h = '<div class="tbl-wrap" style="max-height:none"><table class="ahp-tbl"><thead><tr><th class="l" style="width:34px"><span class="sr">No cálculo</span></th><th class="l">Resposta</th><th class="l">Origem</th><th>RC original</th><th>RC final</th><th>Atend.</th><th>Pop.</th><th>GBM</th><th>Dist.</th><th style="width:40px"></th></tr></thead><tbody>';
   ex.forEach(function(e, idx){
     var ii = idx - BASE_OBJ.length;
     h += '<tr class="'+(e.on?"":"off")+'"><td class="l"><input type="checkbox" class="ahp-on" data-x="'+idx+'" '+(e.on?"checked":"")+' aria-label="Incluir '+esc(e.label)+' no cálculo" title="Incluir no cálculo"></td>'+
       '<td class="l">'+esc(e.label)+'</td><td class="l"><span class="src'+(e.imported?" imp":"")+'">'+(e.imported ? "Importada" : "TCC")+'</span></td>'+
       '<td class="num">'+nf(e.cr0,3)+'</td><td class="num">'+nf(e.cr1,3)+(e.fixed?' <span class="badge fix" title="Julgamento ajustado pela melhoria de consistência">aj.</span>':'')+'</td>'+
-      e.w.map(function(x){ return '<td class="num">'+pct(x,1)+'</td>'; }).join("")+
+      [0,1,3,2].map(function(k){ return '<td class="num">'+pct(e.w[k],1)+'</td>'; }).join("")+
       '<td>'+(e.imported ? '<button type="button" class="del" data-rm="'+ii+'" aria-label="Excluir '+esc(e.label)+'" title="Excluir resposta importada">×</button>' : '')+'</td></tr>';
   });
   h += '<tr class="grp"><td></td><td class="l"><b>Grupo</b></td><td class="l sub">média geométrica das marcadas</td><td></td><td class="num"><b>'+(g?nf(g.cr,3):"–")+'</b></td>'+
-    (g ? g.w.map(function(x){ return '<td class="num"><b>'+pct(x,2)+'</b></td>'; }).join("") : '<td colspan="4" class="sub">sem respostas marcadas</td>')+'<td></td></tr></tbody></table></div>'+
+    (g ? [0,1,3,2].map(function(k){ return '<td class="num"><b>'+pct(g.w[k],2)+'</b></td>'; }).join("") : '<td colspan="4" class="sub">sem respostas marcadas</td>')+'<td></td></tr></tbody></table></div>'+
     '<p class="imp-note">Só as respostas marcadas entram no cálculo dos pesos. As do TCC podem ser desmarcadas, mas não excluídas; as importadas podem ser excluídas no ×. RC: razão de consistência (aceitável até 0,10); respostas acima do limite passam pela melhoria de consistência do TCC antes da agregação por média geométrica.</p>';
   box.innerHTML = h;
   Array.prototype.forEach.call(box.querySelectorAll(".ahp-on"), function(cb){
@@ -1309,7 +1310,7 @@ function renderImport(){
   var body = document.getElementById("impBody");
   var BADGE = {new:'<span class="badge new">Nova</span>', dup:'<span class="badge dup">Já incluída</span>',
                inc:'<span class="badge err">Inconsistente</span>', err:'<span class="badge err">Não reconhecida</span>'};
-  var h = '<div class="tbl-wrap" style="max-height:340px"><table class="imp-tbl"><thead><tr><th></th><th class="l">Data</th><th class="l">Respondente</th><th class="l">Situação</th><th>RC original</th><th>RC final</th><th>Atend.</th><th>Pop.</th><th>Dist.</th><th>GBM</th></tr></thead><tbody>';
+  var h = '<div class="tbl-wrap" style="max-height:340px"><table class="imp-tbl"><thead><tr><th></th><th class="l">Data</th><th class="l">Respondente</th><th class="l">Situação</th><th>RC original</th><th>RC final</th><th>Atend.</th><th>Pop.</th><th>GBM</th><th>Dist.</th></tr></thead><tbody>';
   impRecs.forEach(function(r, i){
     var can = r.status !== "err";
     h += '<tr class="'+(r.status==="dup"||r.status==="err"?"dis":"")+'"><td><input type="checkbox" data-i="'+i+'" '+(r.sel?"checked":"")+(can?"":" disabled")+' aria-label="Incluir resposta de '+esc(r.who)+'"></td>'+
@@ -1318,7 +1319,7 @@ function renderImport(){
         (r.status==="err" ? ' <span class="sub">'+esc(r.errs.join("; "))+'</span>' : '')+'</td>'+
       (r.status==="err" ? '<td colspan="6"></td>' :
         '<td class="num">'+nf(r.cr0,3)+'</td><td class="num">'+nf(r.cr1,3)+(r.fixed?' <span class="badge fix" title="Ajustada pela melhoria de consistência do TCC">aj.</span>':'')+'</td>'+
-        r.w.map(function(x){ return '<td class="num">'+pct(x,1)+'</td>'; }).join(""))+'</tr>';
+        [0,1,3,2].map(function(k){ return '<td class="num">'+pct(r.w[k],1)+'</td>'; }).join(""))+'</tr>';
   });
   h += '</tbody></table></div><div id="impCmp"></div>'+
     '<p class="imp-note">As respostas marcadas como “Já incluída” correspondem às do TCC ou a importações anteriores (mesma data e hora) e ficam desmarcadas para não contar duas vezes. Respostas com RC acima de 0,10 passam pela melhoria de consistência do TCC; se mesmo assim ficarem acima do limite, aparecem como “Inconsistente” e só entram se você marcar. O nome do respondente aparece só aqui e não é guardado.</p>';
@@ -1331,7 +1332,7 @@ function renderImport(){
 function renderImpCmp(){
   var sel = impRecs.filter(function(r){ return r.sel; });
   var cur = groupAhp() || {w:[0,0,0,0], cr:0}, next = groupAhp(selExperts().concat(sel.map(function(r){ return {M:r.M}; })));
-  var names = ["Atendimentos","População","Distância","GBM"], order = [0,3,1,2];
+  var names = ["Atendimentos","População","Distância","GBM"], order = [0,1,3,2];
   document.getElementById("impCmp").innerHTML = '<div class="cmp">'+order.map(function(i){
     var d = 100*(next.w[i]-cur.w[i]), cls = d > 0.005 ? "up" : (d < -0.005 ? "down" : "");
     return '<div>'+names[i]+'<b>'+pct(cur.w[i])+' → '+pct(next.w[i])+'</b><span class="'+cls+'">'+(Math.abs(d)<0.005?"sem alteração":(d>0?"+":"")+nf(d,2)+" p.p.")+'</span></div>';
@@ -1704,7 +1705,7 @@ function reportPDF(){
       {t:"Região Administrativa", w:34}, {t:"Atendimentos", w:15, a:"r", mono:true}, {t:"População", w:16, a:"r", mono:true},
       {t:"GBMs multiemprego na RA", w:16, a:"r", mono:true}, {t:"Distância ao GBM mais próximo (km)", w:19, a:"r", mono:true}],
     state.rows.map(function(r){ var p = isPending(r);
-      return {cells:[r.ra+(p ? " (aguardando dados)" : ""), fmtCell(r.atend, CRIT[0]), fmtCell(r.pop, CRIT[2]), r.gbm === null ? "" : r.gbm, fmtCell(r.dist, CRIT[3])],
+      return {cells:[r.ra+(p ? " (aguardando dados)" : ""), fmtCell(r.atend, CRIT[0]), fmtCell(r.pop, critOf("pop")), r.gbm === null ? "" : r.gbm, fmtCell(r.dist, critOf("dist"))],
               colors: p ? [RP.ink3, RP.ink3, RP.ink3, RP.ink3, RP.ink3] : null}; }),
     {note:["Fonte: atendimentos de 2025 (GESINT/CBMDF); população (PDAD 2024/IPEDF); quantidade de GBMs multiemprego (Matriz Operacional, BG nº 023/2026); distância viária do centroide ponderado pela densidade populacional ao GBM mais próximo (QGIS)."]});
 
@@ -1752,7 +1753,7 @@ function rankingCanvas(){
   g.fillStyle = "#fff"; g.font = "600 17px "+F; g.fillText("Ranking de prioridade das RAs para implantação de GBMs", 24, 47);
   var st = stamp();
   g.fillStyle = "#585e65"; g.font = "12px "+F;
-  g.fillText("Pesos efetivos: Atendimentos "+nf(100*lastRes.eff.atend,2)+"% · GBMs "+nf(100*lastRes.eff.gbm,2)+"% · População "+nf(100*lastRes.eff.pop,2)+"% · Distância "+nf(100*lastRes.eff.dist,2)+"%", 24, 96);
+  g.fillText("Pesos efetivos: Atendimentos "+nf(100*lastRes.eff.atend,2)+"% · População "+nf(100*lastRes.eff.pop,2)+"% · GBMs "+nf(100*lastRes.eff.gbm,2)+"% · Distância "+nf(100*lastRes.eff.dist,2)+"%", 24, 96);
   g.fillText("Critério GBM: "+modeTxt()+" · Gerado em "+st.txt, 24, 114);
   /* legenda */
   var lx = 24; BANDS.forEach(function(b, i){
