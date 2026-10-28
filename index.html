@@ -127,9 +127,9 @@
   #matrix tr.pending td.sticky{background:var(--surface-3);color:var(--ink-2)}
   .rk tr.pend td{background:var(--surface-3);color:var(--ink-3)}
   .alert.info{background:var(--info-bg);border-color:var(--info-line);color:var(--info-fg)}
-  .themebar{display:flex;justify-content:flex-start;margin-bottom:10px}
-  .themebtn{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:5px 12px;font-size:12.5px;border-radius:16px;background:var(--card);color:var(--ink-2);border:1px solid var(--line)}
-  .themebtn:hover{color:var(--ink);border-color:var(--ink-3)}
+  header.top .themebtn{position:absolute;top:14px;right:16px;z-index:2;display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:4px 12px;font-size:12px;border-radius:16px;
+    background:rgba(255,255,255,.08);color:#d7dadd;border:1px solid rgba(255,255,255,.22)}
+  header.top .themebtn:hover{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.4)}
   .themebtn .sun{display:none} :root.tdark .themebtn .sun{display:inline} :root.tdark .themebtn .moon{display:none}
   /* Ajuda da importação */
   .impgroup{position:relative;display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.08)}
@@ -299,7 +299,7 @@
     @page{size:A4;margin:14mm 12mm}
     .grid > section{height:auto!important}
     .grid > section .tbl-wrap{flex:none!important}
-    .themebar{display:none!important}
+    header.top .themebtn{display:none!important}
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     body{background:#fff;font-size:11px}
     .wrap{max-width:none;padding:0}
@@ -327,7 +327,7 @@
   #report table.rw td,#report table.rw th{padding:3px 10px;font-size:11px}
   #report .cap2{font-size:11px;color:var(--ink-2);margin:8px 0 0;line-height:1.5}
   #report .tt{font-weight:600;font-size:12px;margin:12px 0 4px}
-  @media (max-width:560px){details.exp .menu{right:auto;left:0}.weights{grid-template-columns:1fr}header.top h1{font-size:19px}.bar{display:none}.wrap{padding-block:14px 32px}}
+  @media (max-width:560px){header.top{padding-top:52px}details.exp .menu{right:auto;left:0}.weights{grid-template-columns:1fr}header.top h1{font-size:19px}.bar{display:none}.wrap{padding-block:14px 32px}}
 </style>
 <script>
   /* Tema: claro por padrão; escuro só se a pessoa escolheu antes neste navegador */
@@ -336,15 +336,13 @@
 </head>
 <body>
 <div class="wrap">
-<div class="themebar">
+
+<header class="top">
   <button type="button" id="btnTheme" class="themebtn" aria-pressed="false">
     <svg class="moon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
     <svg class="sun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
     <span id="themeLbl">Modo escuro</span>
   </button>
-</div>
-
-<header class="top">
   <div class="deco" aria-hidden="true"><svg class="chev" viewBox="0 0 300 180" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="16">
     <path d="M40 -20 L130 90 L40 200"/><path d="M110 -20 L200 90 L110 200"/><path d="M180 -20 L270 90 L180 200"/></g></svg></div>
   <div class="brand">
@@ -1442,7 +1440,7 @@ function download(blob, name){
 function standalone(title, bodyHtml){
   var css = document.querySelector("style").textContent;
   return "<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>"+esc(title)+"</title><style>"+css+
-    "#report{display:block!important}.themebar,.utils,#obrasFilter,.ahp-actions,.step,.del,.ahp-on{display:none!important}</style></head><body class=\"snapshot\"><div class=\"wrap\">"+bodyHtml+
+    "#report{display:block!important}.themebtn,.utils,#obrasFilter,.ahp-actions,.step,.del,.ahp-on{display:none!important}</style></head><body class=\"snapshot\"><div class=\"wrap\">"+bodyHtml+
     "</div><scr"+"ipt>window.addEventListener('load',function(){setTimeout(function(){window.print();},400);});</scr"+"ipt></body></html>";
 }
 function csvLine(cells){ return cells.map(function(x){ x = String(x); return /[;"\n]/.test(x) ? '"'+x.replace(/"/g,'""')+'"' : x; }).join(";"); }
