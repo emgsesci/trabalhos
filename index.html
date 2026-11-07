@@ -90,6 +90,7 @@
   .w{border-top:3px solid var(--red)}
   .moderow{position:relative;display:flex;align-items:center;gap:8px;margin-top:10px}
   .moderow .mode{margin-top:0}
+  .mode button{white-space:nowrap}
   .w .help.lt{width:16px;height:16px;min-height:0;padding:0;border-radius:50%;font-size:10px;font-weight:600;line-height:1;display:grid;place-items:center;background:none;border:1px solid var(--line);color:var(--ink-3);cursor:help}
   .w .help.lt:hover,.w .help.lt:focus-visible{border-color:var(--ink-2);color:var(--ink)}
   .moderow .helpwrap{position:static;padding-right:0}
@@ -163,27 +164,30 @@
   .impgroup .helpwrap{position:static}
   @media (max-width:760px){.tip{position:fixed;top:auto;left:max(16px, env(safe-area-inset-left, 0px));right:max(16px, env(safe-area-inset-right, 0px));width:auto;max-width:none;transform:none;margin-top:10px}.tip::before{display:none}}
   /* Critério em uso / criado no painel */
-  .w-use{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
-  .use{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;color:var(--ink-2);user-select:none}
+  .w{display:flex;flex-direction:column}
+  .w-use{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid var(--line-2);flex-wrap:wrap}
+  .w > .eff,.w > .moderow,.w > .mode-hint{margin-bottom:10px}
+  .use{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--ink-3);user-select:none}
   .use input{position:absolute;opacity:0;width:1px;height:1px}
-  .use .sw{width:30px;height:17px;border-radius:9px;background:var(--line);position:relative;transition:background .15s;flex:none}
-  .use .sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--card);box-shadow:0 1px 2px var(--shadow);transition:transform .15s}
+  .use .sw{width:24px;height:14px;border-radius:7px;background:var(--line);position:relative;transition:background .15s;flex:none}
+  .use .sw::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--card);box-shadow:0 1px 2px var(--shadow);transition:transform .15s}
   .use input:checked + .sw{background:var(--ok)}
-  .use input:checked + .sw::after{transform:translateX(13px)}
+  .use input:checked + .sw::after{transform:translateX(10px)}
   .use input:focus-visible + .sw{outline:2px solid var(--red);outline-offset:2px}
   .ctag{font-size:11px;color:var(--ink-3);margin-left:auto}
-  .w-use .crit-del{width:auto;min-width:26px;height:24px;border-radius:12px;padding:0 7px;font-size:15px}
+  .w-use .crit-del{width:auto;min-width:22px;height:20px;border-radius:10px;padding:0 6px;font-size:13px}
   .w-use .crit-del.armed{background:var(--red);color:#fff;font-size:11.5px;font-weight:600}
   .w.off{opacity:.62}
   .w.off .val{background:var(--neutral-bg);border-color:var(--line);color:var(--ink-3)}
   .w.off .ut::after{content:" (desmarcado)"}
   .w.custom{border-top-color:var(--p3)}
-  .w.addcrit{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;min-height:150px;cursor:pointer;
+  @media (min-width:1100px){ .weights.row{grid-template-columns:repeat(var(--n),minmax(0,1fr)) 132px} }
+  .w.addcrit{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;min-height:120px;cursor:pointer;
     border:1.5px dashed var(--line);border-top:1.5px dashed var(--line);background:none;color:var(--ink-2);font:inherit;padding:14px}
   .w.addcrit:hover{border-color:var(--red);color:var(--ink)}
   .w.addcrit .plus{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--red-soft);color:var(--red);font-size:22px;font-weight:600;line-height:1}
   .w.addcrit b{font-size:13.5px;color:var(--ink)}
-  .w.addcrit span:last-child{font-size:11.5px;color:var(--ink-3);max-width:200px}
+  .w.addcrit span:last-child{font-size:11px;color:var(--ink-3);max-width:200px;line-height:1.35}
   #matrix th.off{color:var(--ink-3)} #matrix th small{display:block;font-weight:500;font-size:10.5px;color:var(--ink-3)}
   #matrix th.cust{color:var(--p3)}
   #matrix td.off input{background:var(--surface-3);color:var(--ink-3);border-style:dashed;cursor:not-allowed}
@@ -838,8 +842,6 @@ function buildWeights(){
     var id = "w_"+c.key;
     d.innerHTML =
       '<div class="w-top"><span class="lab"><span class="ci" aria-hidden="true">'+(ICONS[c.key] || ICONS.custom)+'</span><label for="'+id+'">'+esc(c.label)+'</label></span><span class="val" id="'+id+'_v"></span></div>'+
-      '<div class="w-use"><label class="use"><input type="checkbox" class="crit-on" id="'+id+'_on" '+(isOn(c.key)?"checked":"")+'><span class="sw" aria-hidden="true"></span><span class="ut">Usar no cálculo</span></label>'+
-        (c.custom ? '<span class="ctag">'+(c.dir > 0 ? "maior valor, maior prioridade" : "maior valor, menor prioridade")+'</span><button type="button" class="del crit-del" data-k="'+c.key+'" aria-label="Excluir o critério '+esc(c.label)+'" title="Excluir critério">×</button>' : '')+'</div>'+
       '<div class="srow"><button type="button" class="step" data-d="-1" aria-label="Diminuir '+esc(c.label)+' em 1 ponto">−</button>'+
       '<div class="rwrap"><input type="range" id="'+id+'" min="0" max="100" step="1" aria-describedby="'+id+'_e">'+
       '<div class="scale"><span>0%</span><span>50%</span><span>100%</span></div></div>'+
@@ -857,6 +859,9 @@ function buildWeights(){
         '<span>Use Quantidade para explorar cenários; para decisões, prefira o Binário.</span></span></span></div>'+
         '<div class="mode-hint" id="modeHint"></div>';
     }
+    d.insertAdjacentHTML("beforeend",
+      '<div class="w-use"><label class="use"><input type="checkbox" class="crit-on" id="'+id+'_on" '+(isOn(c.key)?"checked":"")+'><span class="sw" aria-hidden="true"></span><span class="ut">Usar no cálculo</span></label>'+
+        (c.custom ? '<span class="ctag">'+(c.dir > 0 ? "maior valor, maior prioridade" : "maior valor, menor prioridade")+'</span><button type="button" class="del crit-del" data-k="'+c.key+'" aria-label="Excluir o critério '+esc(c.label)+'" title="Excluir critério">×</button>' : '')+'</div>');
     wBox.appendChild(d);
     sliders[c.key] = d.querySelector("input[type=range]");
     valEls[c.key] = d.querySelector(".val");
@@ -897,10 +902,15 @@ function buildWeights(){
   if (state.custom.length < MAX_CUSTOM){
     var add = document.createElement("button");
     add.type = "button"; add.className = "w addcrit"; add.id = "btnAddCrit";
-    add.innerHTML = '<span class="plus" aria-hidden="true">+</span><b>Novo critério</b><span>Defina nome, peso e sentido; a coluna aparece na Matriz de dados</span>';
+    add.innerHTML = '<span class="plus" aria-hidden="true">+</span><b>Novo critério</b><span>Nome, peso e sentido</span>';
+    add.title = "Criar um critério: a coluna aparece na Matriz de dados";
     add.addEventListener("click", openCritModal);
     wBox.appendChild(add);
   }
+  /* uma linha só: critérios com a mesma largura e o botão de novo critério estreito ao lado */
+  var n = allCrit().length;
+  wBox.style.setProperty("--n", n);
+  wBox.classList.toggle("row", n <= 5 && state.custom.length < MAX_CUSTOM);
 }
 function toggleCrit(k, on){
   if (on){
