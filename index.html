@@ -23,6 +23,7 @@
     --violet-soft:#eeeaf7; --violet-fg:#594a91; --info-bg:#eef4f8; --info-line:#c9dbe8; --info-fg:#24435c;
     --warn-line:#ecd08a; --warn-fg:#5c3d00; --warn-mark:#d9a400; --err-fg:#7a0c12; --l2-fg:#a8400a; --l3-fg:#3f6a88;
     --shadow:rgba(0,0,0,.18); --overlay:rgba(20,22,24,.55);
+    --wc-border:#d6d1ca; --wc-bg:#fbfaf8; --wc-bg2:#f3f0ec; --wc-grain:rgba(120,100,80,.045); --wc-shadow:0 1px 2px rgba(60,40,20,.07), 0 4px 12px rgba(60,40,20,.05);
     --radius:10px;
     --font:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
     --mono:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;
@@ -39,6 +40,7 @@
     --violet-soft:#2a2540; --violet-fg:#bcadef; --info-bg:#172634; --info-line:#2c4a62; --info-fg:#b9d5ea;
     --warn-line:#6b5420; --warn-fg:#f0d89c; --warn-mark:#c9970a; --err-fg:#f4b6bb; --l2-fg:#f49c66; --l3-fg:#a0c2db;
     --shadow:rgba(0,0,0,.5); --overlay:rgba(0,0,0,.65);
+    --wc-border:#3d444b; --wc-bg:#22272b; --wc-bg2:#1b1f23; --wc-grain:rgba(255,255,255,.025); --wc-shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
     color-scheme:dark;
   }
   *{box-sizing:border-box}
@@ -76,7 +78,11 @@
 
   /* Pesos */
   .weights{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-  .w{border:1px solid var(--line-2);border-radius:8px;padding:12px;background:var(--surface-2)}
+  .w{border:1px solid var(--wc-border);border-radius:9px;padding:12px;box-shadow:var(--wc-shadow);
+    background:
+      repeating-linear-gradient(135deg, var(--wc-grain) 0 1px, transparent 1px 7px),
+      linear-gradient(180deg, var(--wc-bg), var(--wc-bg2));}
+  .w:not(.addcrit):hover{border-color:var(--ink-3)}
   .w-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .w label{font-weight:600;font-size:13px}
   .w .val{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1;color:var(--red);background:var(--red-soft);border:1px solid var(--red-line);border-radius:7px;padding:4px 7px;flex:none}
@@ -177,7 +183,7 @@
   .ctag{font-size:11px;color:var(--ink-3);margin-left:auto}
   .w-use .crit-del{width:auto;min-width:22px;height:20px;border-radius:10px;padding:0 6px;font-size:13px}
   .w-use .crit-del.armed{background:var(--red);color:#fff;font-size:11.5px;font-weight:600}
-  .w.off{opacity:.62}
+  .w.off{opacity:.62;box-shadow:none}
   .w.off .val{background:var(--neutral-bg);border-color:var(--line);color:var(--ink-3)}
   .w.off .ut::after{content:" (desmarcado)"}
   .w.custom{border-top-color:var(--p3)}
