@@ -142,6 +142,10 @@
   /* Ajuda da importação */
   .impgroup{position:relative;display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.08)}
   .impgroup:hover{border-color:rgba(255,255,255,.4)}
+  .impgroup.green{background:#2f7d4f;border-color:#2f7d4f}
+  .impgroup.green:hover{border-color:#4aa271}
+  .impgroup.green button.imp{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+  .impgroup.green .help{border-color:rgba(255,255,255,.5)!important;color:rgba(255,255,255,.8)!important}
   .impgroup.red{background:var(--red);border-color:var(--red)}
   .impgroup.red:hover{border-color:#e04a52}
   .impgroup.red details.exp summary{border:0;background:none;padding-right:6px}
@@ -205,6 +209,21 @@
   .radio{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-2);padding:3px 0;cursor:pointer}
   .radio input{accent-color:var(--red)}
   .nc-err{color:var(--red);font-size:12.5px;font-weight:600;margin:0;min-height:1em}
+  /* Cenários */
+  .sc{max-width:640px}
+  .sc-body{padding:4px 18px 18px;display:flex;flex-direction:column;gap:16px}
+  .sc-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .sc-row input[type=text]{flex:1 1 220px;min-width:0}
+  .sc-h{margin:0 0 8px;font-size:13px}
+  .green-btn{background:#2f7d4f!important;border-color:#2f7d4f!important}
+  .green-btn:hover{background:#25683f!important}
+  .sc-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);margin-bottom:6px;flex-wrap:wrap}
+  .sc-item .nm{font-weight:600;font-size:13px}
+  .sc-item .mt{font-size:11.5px;color:var(--ink-3);flex-basis:100%}
+  .sc-item .act{margin-left:auto;display:flex;gap:6px}
+  .sc-item .info{flex:1 1 200px;min-width:0}
+  .sc-empty{font-size:12.5px;color:var(--ink-3);padding:10px 12px;border:1px dashed var(--line);border-radius:8px}
+  .sc-file{border-top:1px solid var(--line-2);padding-top:14px}
   /* Importação / AHP */
   header.top .utils button.imp{display:inline-flex;align-items:center;gap:7px}
   button.sm{min-height:30px;padding:4px 10px;font-size:12.5px}
@@ -452,6 +471,19 @@
       </span>
     </span>
     </span>
+    <span class="impgroup green">
+    <button type="button" id="btnScen" class="imp">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/></svg>Salvar cenário
+    </button>
+    <span class="helpwrap">
+      <button type="button" class="help" id="btnScenHelp" aria-label="Como funcionam os cenários salvos" aria-describedby="btnScenHelpTip">?</button>
+      <span class="tip" role="tooltip" id="btnScenHelpTip">
+        <b>Guardar e reabrir cenários</b>
+        <span>O painel já guarda sozinho a última situação neste navegador: ao voltar à página pelo mesmo computador e navegador, os dados, pesos e critérios reaparecem.</span>
+        <span>Aqui você dá nome a um cenário e o guarda para reabrir quando quiser, sem perder os outros. Para usar em outro computador ou enviar a alguém, baixe o cenário como arquivo e abra-o no outro painel.</span>
+      </span>
+    </span>
+    </span>
     <span class="impgroup">
     <button type="button" id="btnReset" class="imp">Restaurar dados e pesos iniciais</button>
     <span class="helpwrap">
@@ -459,7 +491,7 @@
       <span class="tip" role="tooltip" id="btnResetHelpTip">
         <b>Voltar ao cenário do TCC</b>
         <span>Recoloca os dados originais da matriz, os pesos do AHP do TCC (47%, 14%, 26% e 13%), o critério GBM binário, os quatro critérios do TCC em uso e apenas as 4 respostas originais dos especialistas.</span>
-        <span>Os critérios criados no painel, as respostas importadas e todas as edições salvas neste navegador são apagados. O botão pede um segundo clique para confirmar, e a ação não pode ser desfeita.</span>
+        <span>Os critérios criados no painel, as respostas importadas e as edições em andamento são apagados. Os cenários guardados em “Salvar cenário” continuam disponíveis. O botão pede um segundo clique para confirmar, e a ação não pode ser desfeita.</span>
       </span>
     </span>
     </span>
@@ -588,6 +620,38 @@
 </section>
 
 <section id="report" aria-hidden="true"></section>
+
+<div class="modal" id="scenModal" hidden role="dialog" aria-modal="true" aria-labelledby="scTitle">
+  <div class="modal-card sc">
+    <div class="modal-head">
+      <div>
+        <h2 id="scTitle">Cenários salvos</h2>
+        <p class="sub">Cada cenário guarda a matriz de dados, os pesos, os critérios em uso ou criados, o modo do critério GBM e as respostas do AHP.</p>
+      </div>
+      <button type="button" class="x" id="scClose" aria-label="Fechar">×</button>
+    </div>
+    <div class="sc-body">
+      <form class="sc-save" id="scForm" novalidate>
+        <label class="fld" for="scName"><span>Salvar o cenário atual como</span>
+          <span class="sc-row"><input type="text" id="scName" maxlength="60" autocomplete="off"><button type="submit" class="primary green-btn">Salvar</button></span></label>
+        <p class="nc-err" id="scErr" role="alert"></p>
+      </form>
+      <div>
+        <h3 class="sc-h">Guardados neste navegador</h3>
+        <div id="scList"></div>
+      </div>
+      <div class="sc-file">
+        <h3 class="sc-h">Levar para outro computador</h3>
+        <div class="sc-row">
+          <button type="button" id="scDown">Baixar cenário atual (.json)</button>
+          <button type="button" id="scOpen">Abrir arquivo de cenário</button>
+          <input type="file" id="scFile" accept=".json,application/json" hidden>
+        </div>
+        <p class="imp-note">Os cenários ficam guardados no navegador deste computador, como um cookie. Eles se perdem em janela anônima ou se os dados de navegação forem apagados. Para garantir, baixe o arquivo.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal" id="critModal" hidden role="dialog" aria-modal="true" aria-labelledby="ncTitle">
   <form class="modal-card nc" id="critForm" novalidate>
@@ -1593,24 +1657,30 @@ document.getElementById("impOk").addEventListener("click", function(){
 var stEl = document.getElementById("saveStatus"), stTimer = null;
 function save(){
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify({rows:state.rows, raw:state.raw, w:state.w, mode:state.mode, experts:state.experts, baseOn:state.baseOn, on:state.on, custom:state.custom}));
+    localStorage.setItem(STORE_KEY, JSON.stringify(snapshot()));
     stEl.textContent = "Alterações salvas neste navegador"; stEl.className = "status ok";
   } catch(e){
     stEl.textContent = "Salvamento local indisponível neste modo de abertura"; stEl.className = "status";
   }
   clearTimeout(stTimer); stTimer = setTimeout(function(){ stEl.textContent = ""; }, 2500);
 }
+function snapshot(){
+  return JSON.parse(JSON.stringify({rows:state.rows, raw:state.raw, w:state.w, mode:state.mode, experts:state.experts, baseOn:state.baseOn, on:state.on, custom:state.custom}));
+}
 function load(){
+  try { applySnapshot(JSON.parse(localStorage.getItem(STORE_KEY) || "null")); } catch(e){ /* sem armazenamento: segue com os dados iniciais */ }
+}
+/* Aplica um cenário salvo sobre o estado atual; devolve false se o conteúdo não for reconhecido */
+function applySnapshot(s){
   try {
-    var s = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
-    if (!s || !Array.isArray(s.rows)) return;
+    if (!s || !Array.isArray(s.rows)) return false;
     /* migração: versões anteriores tinham só as 35 RAs */
     if (s.rows.length < INITIAL.length && s.rows.length === BASE_N){
       for (var q = BASE_N; q < INITIAL.length; q++) s.rows.push({ra:INITIAL[q][0], atend:0, gbm:0, pop:0, dist:0});
     }
-    if (s.rows.length !== INITIAL.length) return;
+    if (s.rows.length !== INITIAL.length) return false;
     var okNames = s.rows.every(function(r, i){ return r && r.ra === INITIAL[i][0]; });
-    if (!okNames) return;
+    if (!okNames) return false;
     if (Array.isArray(s.custom)){
       var seen = {};
       state.custom = s.custom.filter(function(c){
@@ -1643,7 +1713,8 @@ function load(){
     if (Array.isArray(s.baseOn) && s.baseOn.length === BASE_EXPERTS.length){
       state.baseOn = s.baseOn.map(function(v){ return v !== false; });
     }
-  } catch(e){ /* sem armazenamento: segue com os dados iniciais */ }
+    return true;
+  } catch(e){ return false; }
 }
 
 /* ---------- Utilitários ---------- */
@@ -2073,6 +2144,90 @@ resetBtn.addEventListener("click", function(){
   buildWeights(); buildMatrix(); refresh();
 });
 function disarm(){ clearTimeout(armTimer); resetBtn.classList.remove("danger-armed"); resetBtn.textContent = "Restaurar dados e pesos iniciais"; }
+
+/* ---------- Cenários salvos ---------- */
+var SCEN_KEY = STORE_KEY+"_cenarios", MAX_SCEN = 30;
+var scenModal = document.getElementById("scenModal");
+function scenList(){ try { var a = JSON.parse(localStorage.getItem(SCEN_KEY) || "[]"); return Array.isArray(a) ? a : []; } catch(e){ return []; } }
+function scenStore(a){ try { localStorage.setItem(SCEN_KEY, JSON.stringify(a)); return true; } catch(e){ return false; } }
+function scenSummary(d){
+  try {
+    var names = {atend:"Atend.", pop:"Pop.", gbm:"GBM", dist:"Dist."};
+    var parts = [];
+    ["atend","pop","gbm","dist"].forEach(function(k){ if (!(d.on && d.on[k] === false)) parts.push(names[k]+" "+d.w[k]+"%"); });
+    (d.custom||[]).forEach(function(c){ if (!(d.on && d.on[c.key] === false)) parts.push(c.label+" "+d.w[c.key]+"%"); });
+    return parts.join(" · ")+" · GBM "+(d.mode === "qtd" ? "quantidade" : "binário");
+  } catch(e){ return ""; }
+}
+function renderScen(){
+  var a = scenList(), box = document.getElementById("scList");
+  if (!a.length){ box.innerHTML = '<p class="sc-empty">Nenhum cenário guardado ainda. Dê um nome acima e clique em Salvar.</p>'; return; }
+  box.innerHTML = a.map(function(x, i){
+    return '<div class="sc-item"><div class="info"><div class="nm">'+esc(x.name)+'</div><div class="mt">'+esc(x.at)+' · '+esc(scenSummary(x.data))+'</div></div>'+
+      '<div class="act"><button type="button" class="sm" data-open="'+i+'">Abrir</button><button type="button" class="sm" data-del="'+i+'">Excluir</button></div></div>';
+  }).join("");
+  Array.prototype.forEach.call(box.querySelectorAll("[data-open]"), function(b){
+    b.addEventListener("click", function(){ var x = scenList()[+b.dataset.open]; if (x) openScenario(x.data, x.name); });
+  });
+  Array.prototype.forEach.call(box.querySelectorAll("[data-del]"), function(b){
+    var t = null;
+    b.addEventListener("click", function(){
+      if (!b.classList.contains("danger-armed")){ b.classList.add("danger-armed"); b.textContent = "Confirmar"; t = setTimeout(function(){ b.classList.remove("danger-armed"); b.textContent = "Excluir"; }, 3000); return; }
+      clearTimeout(t); var arr = scenList(); arr.splice(+b.dataset.del, 1); scenStore(arr); renderScen();
+    });
+  });
+}
+function openScenario(data, name){
+  var prev = state;
+  state = fresh();
+  if (!applySnapshot(data)){
+    state = prev;
+    document.getElementById("scErr").textContent = "Não foi possível abrir: o conteúdo não corresponde a um cenário deste painel.";
+    return;
+  }
+  closeScen();
+  buildWeights(); buildMatrix(); refresh();
+  stEl.textContent = "Cenário “"+name+"” aberto"; stEl.className = "status ok";
+}
+function openScen(){
+  var st = stamp();
+  document.getElementById("scName").value = "Cenário "+st.txt;
+  document.getElementById("scErr").textContent = "";
+  renderScen();
+  lastFocus = document.activeElement; scenModal.hidden = false; document.body.style.overflow = "hidden";
+  document.getElementById("scName").select();
+}
+function closeScen(){ scenModal.hidden = true; document.body.style.overflow = ""; if (lastFocus) lastFocus.focus(); }
+document.getElementById("btnScen").addEventListener("click", openScen);
+document.getElementById("scClose").addEventListener("click", closeScen);
+scenModal.addEventListener("click", function(e){ if (e.target === scenModal) closeScen(); });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !scenModal.hidden) closeScen(); });
+document.getElementById("scForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var name = document.getElementById("scName").value.replace(/\s+/g, " ").trim(), err = document.getElementById("scErr");
+  if (!name){ err.textContent = "Dê um nome ao cenário."; return; }
+  var a = scenList().filter(function(x){ return normTxt(x.name) !== normTxt(name); });
+  a.unshift({name:name, at:stamp().txt, data:snapshot()});
+  if (a.length > MAX_SCEN) a = a.slice(0, MAX_SCEN);
+  if (!scenStore(a)){ err.textContent = "Este navegador não permite guardar dados aqui. Use “Baixar cenário atual”."; return; }
+  err.textContent = "";
+  renderScen();
+  stEl.textContent = "Cenário “"+name+"” salvo"; stEl.className = "status ok";
+});
+document.getElementById("scDown").addEventListener("click", function(){
+  var name = document.getElementById("scName").value.trim() || "Cenário";
+  var blob = new Blob([JSON.stringify({tipo:"cenario-priorizacao-gbms", versao:1, nome:name, salvo_em:stamp().txt, data:snapshot()}, null, 1)], {type:"application/json"});
+  download(blob, "cenario_priorizacao_gbms_"+stamp().file+".json");
+});
+document.getElementById("scOpen").addEventListener("click", function(){ document.getElementById("scFile").click(); });
+document.getElementById("scFile").addEventListener("change", function(){
+  var f = this.files && this.files[0]; this.value = ""; if (!f) return;
+  f.text().then(function(t){
+    var o = null; try { o = JSON.parse(t); } catch(e){}
+    var data = o && o.data ? o.data : o, name = (o && o.nome) || f.name.replace(/\.json$/i, "");
+    openScenario(data, name);
+  });
+});
 
 /* ---------- Tema claro / escuro ---------- */
 var themeBtn = document.getElementById("btnTheme");
