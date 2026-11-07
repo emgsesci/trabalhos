@@ -75,7 +75,7 @@
   .card-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px 16px;margin-bottom:12px}
 
   /* Pesos */
-  .weights{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .weights{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
   .w{border:1px solid var(--line-2);border-radius:8px;padding:12px;background:var(--surface-2)}
   .w-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .w label{font-weight:600;font-size:13px}
@@ -162,6 +162,41 @@
   .helpwrap:hover .tip,.helpwrap:focus-within .tip{display:flex}
   .impgroup .helpwrap{position:static}
   @media (max-width:760px){.tip{position:fixed;top:auto;left:max(16px, env(safe-area-inset-left, 0px));right:max(16px, env(safe-area-inset-right, 0px));width:auto;max-width:none;transform:none;margin-top:10px}.tip::before{display:none}}
+  /* Critério em uso / criado no painel */
+  .w-use{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .use{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;color:var(--ink-2);user-select:none}
+  .use input{position:absolute;opacity:0;width:1px;height:1px}
+  .use .sw{width:30px;height:17px;border-radius:9px;background:var(--line);position:relative;transition:background .15s;flex:none}
+  .use .sw::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--card);box-shadow:0 1px 2px var(--shadow);transition:transform .15s}
+  .use input:checked + .sw{background:var(--ok)}
+  .use input:checked + .sw::after{transform:translateX(13px)}
+  .use input:focus-visible + .sw{outline:2px solid var(--red);outline-offset:2px}
+  .ctag{font-size:11px;color:var(--ink-3);margin-left:auto}
+  .w-use .crit-del{width:auto;min-width:26px;height:24px;border-radius:12px;padding:0 7px;font-size:15px}
+  .w-use .crit-del.armed{background:var(--red);color:#fff;font-size:11.5px;font-weight:600}
+  .w.off{opacity:.62}
+  .w.off .val{background:var(--neutral-bg);border-color:var(--line);color:var(--ink-3)}
+  .w.off .ut::after{content:" (desmarcado)"}
+  .w.custom{border-top-color:var(--p3)}
+  .w.addcrit{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;min-height:150px;cursor:pointer;
+    border:1.5px dashed var(--line);border-top:1.5px dashed var(--line);background:none;color:var(--ink-2);font:inherit;padding:14px}
+  .w.addcrit:hover{border-color:var(--red);color:var(--ink)}
+  .w.addcrit .plus{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--red-soft);color:var(--red);font-size:22px;font-weight:600;line-height:1}
+  .w.addcrit b{font-size:13.5px;color:var(--ink)}
+  .w.addcrit span:last-child{font-size:11.5px;color:var(--ink-3);max-width:200px}
+  #matrix th.off{color:var(--ink-3)} #matrix th small{display:block;font-weight:500;font-size:10.5px;color:var(--ink-3)}
+  #matrix th.cust{color:var(--p3)}
+  #matrix td.off input{background:var(--surface-3);color:var(--ink-3);border-style:dashed;cursor:not-allowed}
+  .nc{max-width:520px}
+  .nc-body{padding:6px 18px 0;display:flex;flex-direction:column;gap:12px}
+  .fld{display:flex;flex-direction:column;gap:5px;border:0;padding:0;margin:0;font-size:13px}
+  .fld > span,.fld legend{font-weight:600;color:var(--ink);padding:0;margin-bottom:4px}
+  .fld small{font-weight:400;color:var(--ink-3);margin-left:6px}
+  .fld input[type=text],.fld input[type=number]{font:inherit;padding:8px 10px;border:1px solid var(--edit-line);border-radius:7px;background:var(--edit);color:var(--ink)}
+  .fld input[type=number]{width:120px;font-family:var(--mono)}
+  .radio{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-2);padding:3px 0;cursor:pointer}
+  .radio input{accent-color:var(--red)}
+  .nc-err{color:var(--red);font-size:12.5px;font-weight:600;margin:0;min-height:1em}
   /* Importação / AHP */
   header.top .utils button.imp{display:inline-flex;align-items:center;gap:7px}
   button.sm{min-height:30px;padding:4px 10px;font-size:12.5px}
@@ -303,7 +338,7 @@
     .grid > section{display:flex;flex-direction:column;height:780px}
     .grid > section .tbl-wrap{flex:1 1 auto;min-height:0;max-height:none}
   }
-  @media (max-width:1080px){.grid{grid-template-columns:minmax(0,1fr)}.weights{grid-template-columns:repeat(2,minmax(0,1fr))}.tbl-wrap{max-height:520px}}
+  @media (max-width:1080px){.grid{grid-template-columns:minmax(0,1fr)}.tbl-wrap{max-height:520px}}
   /* Impressão / PDF */
   @media print{
     @page{size:A4;margin:14mm 12mm}
@@ -365,7 +400,7 @@
     <div>
       <div class="kicker">CBMDF · Apoio à decisão</div>
       <h1>Priorização de Regiões Administrativas para novos GBMs</h1>
-      <p>Índice de prioridade por soma ponderada de quatro critérios normalizados pelo método Min-Max. Altere os dados ou os pesos e o ranking é recalculado na hora.</p>
+      <p>Índice de prioridade por soma ponderada dos critérios em uso, normalizados pelo método Min-Max. Altere os dados ou os pesos e o ranking é recalculado na hora.</p>
     </div>
   </div>
   <div class="utils">
@@ -415,8 +450,8 @@
       <button type="button" class="help" id="btnResetHelp" aria-label="O que a restauração desfaz" aria-describedby="btnResetHelpTip">?</button>
       <span class="tip" role="tooltip" id="btnResetHelpTip">
         <b>Voltar ao cenário do TCC</b>
-        <span>Recoloca os dados originais da matriz, os pesos do AHP do TCC (47%, 26%, 14% e 13%), o critério GBM binário e apenas as 4 respostas originais dos especialistas.</span>
-        <span>As respostas importadas e todas as edições salvas neste navegador são apagadas. O botão pede um segundo clique para confirmar, e a ação não pode ser desfeita.</span>
+        <span>Recoloca os dados originais da matriz, os pesos do AHP do TCC (47%, 14%, 26% e 13%), o critério GBM binário, os quatro critérios do TCC em uso e apenas as 4 respostas originais dos especialistas.</span>
+        <span>Os critérios criados no painel, as respostas importadas e todas as edições salvas neste navegador são apagados. O botão pede um segundo clique para confirmar, e a ação não pode ser desfeita.</span>
       </span>
     </span>
     </span>
@@ -428,7 +463,7 @@
   <div class="card-head">
     <div>
       <h2 id="h-pesos"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Pesos dos critérios</h2>
-      <p class="sub">Escala de 0% a 100%, em passos de 1 ponto. A soma dos quatro pesos é travada em 100%: para aumentar um critério, reduza antes outro.</p>
+      <p class="sub">Escala de 0% a 100%, em passos de 1 ponto. A soma dos pesos dos critérios em uso é travada em 100%: para aumentar um critério, reduza antes outro. Desmarque um critério para tirá-lo do cálculo ou crie um novo no último card.</p>
     </div>
     <span class="status" id="saveStatus" aria-live="polite"></span>
   </div>
@@ -473,15 +508,7 @@
     <div id="dataAlert"></div>
     <div class="tbl-wrap">
       <table id="matrix">
-        <thead>
-          <tr>
-            <th class="l sticky">Região Administrativa</th>
-            <th>Atendimentos</th>
-            <th>População</th>
-            <th>GBMs multiemprego na RA</th>
-            <th>Distância ao GBM mais próximo (km)</th>
-          </tr>
-        </thead>
+        <thead id="matrixHead"></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -554,6 +581,39 @@
 
 <section id="report" aria-hidden="true"></section>
 
+<div class="modal" id="critModal" hidden role="dialog" aria-modal="true" aria-labelledby="ncTitle">
+  <form class="modal-card nc" id="critForm" novalidate>
+    <div class="modal-head">
+      <div>
+        <h2 id="ncTitle">Novo critério</h2>
+        <p class="sub">O critério entra no cálculo com o peso escolhido e ganha uma coluna na Matriz de dados.</p>
+      </div>
+      <button type="button" class="x" id="ncClose" aria-label="Fechar">×</button>
+    </div>
+    <div class="nc-body">
+      <label class="fld" for="ncName"><span>Nome do critério</span>
+        <input type="text" id="ncName" maxlength="40" autocomplete="off" placeholder="Ex.: Área urbana (km²)"></label>
+      <label class="fld" for="ncW"><span>Peso (%) <small>disponível: <b id="ncFree">0%</b></small></span>
+        <input type="number" id="ncW" min="0" max="100" step="1" inputmode="numeric"></label>
+      <p class="imp-note" id="ncWNote"></p>
+      <fieldset class="fld">
+        <legend>Como o valor influencia a prioridade</legend>
+        <label class="radio"><input type="radio" name="ncDir" value="1" checked><span>Quanto <b>maior</b> o valor, <b>maior</b> a prioridade da RA</span></label>
+        <label class="radio"><input type="radio" name="ncDir" value="-1"><span>Quanto <b>maior</b> o valor, <b>menor</b> a prioridade da RA</span></label>
+      </fieldset>
+      <p class="imp-note">Os valores começam vazios. Enquanto houver célula vazia nesse critério, o ranking fica em pausa. Para preencher rápido, copie uma coluna do Excel (na mesma ordem das RAs) e cole na primeira célula da nova coluna.</p>
+      <p class="nc-err" id="ncErr" role="alert"></p>
+    </div>
+    <div class="modal-foot">
+      <span></span>
+      <div class="utils2">
+        <button type="button" id="ncCancel">Cancelar</button>
+        <button type="submit" id="ncOk" class="primary">Criar critério</button>
+      </div>
+    </div>
+  </form>
+</div>
+
 <div class="modal" id="impModal" hidden role="dialog" aria-modal="true" aria-labelledby="impTitle">
   <div class="modal-card">
     <div class="modal-head">
@@ -623,6 +683,19 @@ var CRIT = [
   {key:"dist",  label:"Distância ao GBM mais próximo", col:4, dir:+1, intOnly:false, thousands:false}
 ];
 var W0 = {atend:47, gbm:26, pop:14, dist:13};
+var MAX_CUSTOM = 4;
+/* Critérios criados no painel somam-se aos quatro do TCC */
+var customCache = {};
+function customCrit(c){
+  var o = customCache[c.key];
+  if (!o){ o = customCache[c.key] = {key:c.key, custom:true, intOnly:false, thousands:true}; }
+  o.label = c.label; o.dir = c.dir; return o;
+}
+function allCrit(){ return CRIT.concat(state.custom.map(customCrit)); }
+function isOn(k){ return state.on[k] !== false; }
+function activeCrit(){ return allCrit().filter(function(c){ return isOn(c.key); }); }
+function matrixCols(){ return MCOLS_KEYS.map(critOf).concat(state.custom.map(customCrit)); }
+function activeSum(){ return activeCrit().reduce(function(t,c){ return t + (state.w[c.key]||0); }, 0); }
 var MODE0 = "bin";
 var STORE_KEY = "cbmdf_priorizacao_gbms_v1";
 
@@ -636,7 +709,9 @@ function fresh(){
     w: {atend:W0.atend, gbm:W0.gbm, pop:W0.pop, dist:W0.dist},
     mode: MODE0,
     experts: [],      /* respostas importadas do formulário (somam-se às do TCC) */
-    baseOn: [true,true,true,true]  /* respostas do TCC marcadas para o cálculo */
+    baseOn: [true,true,true,true], /* respostas do TCC marcadas para o cálculo */
+    on: {},           /* critérios desmarcados: on[key] === false */
+    custom: []        /* critérios criados no painel: {key, label, dir} */
   };
 }
 
@@ -663,22 +738,24 @@ function parseCell(str, c){
 
 /* ---------- Cálculo ---------- */
 function compute(rows, w, mode){
-  var issues = [];
+  var issues = [], ACT = activeCrit();
   rows.forEach(function(r, i){
-    CRIT.forEach(function(c){
+    if (isPending(r) && !Object.keys(state.raw).some(function(k){ return k.indexOf(i+"|") === 0; })) return;
+    ACT.forEach(function(c){
       if (state.raw[i+"|"+c.key] !== undefined) issues.push({ra:r.ra, c:c.label, t:"inválido"});
       else if (r[c.key] === null) issues.push({ra:r.ra, c:c.label, t:"ausente"});
     });
   });
   if (issues.length) return {error:"data", issues:issues};
-  var sumW = CRIT.reduce(function(s,c){ return s + w[c.key]; }, 0);
+  if (!ACT.length) return {error:"nocrit"};
+  var sumW = ACT.reduce(function(s,c){ return s + (w[c.key]||0); }, 0);
   if (sumW <= 0) return {error:"weights"};
-  var eff = {}; CRIT.forEach(function(c){ eff[c.key] = w[c.key]/sumW; });
+  var eff = {}; allCrit().forEach(function(c){ eff[c.key] = isOn(c.key) ? (w[c.key]||0)/sumW : 0; });
   var pending = rows.filter(isPending), all = rows;
   rows = rows.filter(function(r){ return !isPending(r); });
   if (rows.length < 2) return {error:"few", pending:pending};
   var z = rows.map(function(){ return {}; });
-  CRIT.forEach(function(c){
+  ACT.forEach(function(c){
     var vals = rows.map(function(r){
       var v = r[c.key];
       return (c.key === "gbm" && mode === "bin") ? (v > 0 ? 1 : 0) : v;
@@ -689,7 +766,7 @@ function compute(rows, w, mode){
     });
   });
   var out = rows.map(function(r, i){
-    var ip = 0; CRIT.forEach(function(c){ ip += eff[c.key]*z[i][c.key]; });
+    var ip = 0; ACT.forEach(function(c){ ip += eff[c.key]*z[i][c.key]; });
     return {ra:r.ra, ip:100*ip, atend:r.atend, gbm:r.gbm};
   });
   out.sort(function(a,b){
@@ -742,71 +819,155 @@ var ICONS = {
   dist:  SV+'<circle cx="6" cy="18" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6H10a3 3 0 0 1 0-6h4"/><path d="M18 2a3 3 0 0 0-3 3c0 2.2 3 5 3 5s3-2.8 3-5a3 3 0 0 0-3-3z"/></svg>'
 };
 var wBox = document.getElementById("weights");
-var sliders = {}, valEls = {}, effEls = {}, modeBtns = {}, stepBtns = {};
-CRIT.forEach(function(c){
-  var d = document.createElement("div"); d.className = "w";
-  var id = "w_"+c.key;
-  d.innerHTML =
-    '<div class="w-top"><span class="lab"><span class="ci" aria-hidden="true">'+ICONS[c.key]+'</span><label for="'+id+'">'+c.label+'</label></span><span class="val" id="'+id+'_v"></span></div>'+
-    '<div class="srow"><button type="button" class="step" data-d="-1" aria-label="Diminuir '+c.label+' em 1 ponto">−</button>'+
-    '<div class="rwrap"><input type="range" id="'+id+'" min="0" max="100" step="1" aria-describedby="'+id+'_e">'+
-    '<div class="scale"><span>0%</span><span>50%</span><span>100%</span></div></div>'+
-    '<button type="button" class="step" data-d="1" aria-label="Aumentar '+c.label+' em 1 ponto">+</button></div>'+
-    '<div class="eff" id="'+id+'_e">Peso efetivo: <b>–</b></div>';
-  if (c.key === "gbm"){
-    d.innerHTML +=
-      '<div class="moderow"><div class="mode" role="group" aria-label="Modo do critério GBM">'+
-      '<button type="button" data-mode="bin">Binário (TCC)</button>'+
-      '<button type="button" data-mode="qtd">Quantidade</button></div>'+
-      '<span class="helpwrap"><button type="button" class="help lt" id="btnModeHelp" aria-label="Diferença entre Binário e Quantidade" aria-describedby="btnModeHelpTip">?</button>'+
-      '<span class="tip" role="tooltip" id="btnModeHelpTip"><b>Como o critério GBM é calculado</b>'+
-      '<span><b>Binário (TCC):</b> considera só se a RA tem ou não GBM. Sem GBM recebe nota 1; com um ou mais, nota 0. É o modo usado no TCC e o que corresponde aos pesos dados pelos especialistas.</span>'+
-      '<span><b>Quantidade:</b> a nota cai conforme o número de GBMs na RA, de 1 (nenhum) até 0 (a RA com mais GBMs). Diferencia RAs com 1, 2 ou 3 unidades, mas diminui a vantagem de quem não tem GBM: RAs com 1 GBM recebem 0,67 e sobem no ranking.</span>'+
-      '<span>Use Quantidade para explorar cenários; para decisões, prefira o Binário.</span></span></span></div>'+
-      '<div class="mode-hint" id="modeHint"></div>';
-  }
-  wBox.appendChild(d);
-  sliders[c.key] = d.querySelector("input");
-  valEls[c.key] = d.querySelector(".val");
-  effEls[c.key] = d.querySelector(".eff b");
-  function setW(v){
-    /* Trava: a soma dos quatro pesos nunca passa de 100% */
-    var others = 0;
-    CRIT.forEach(function(o){ if (o.key !== c.key) others += state.w[o.key]; });
-    var cap = 100 - others;
-    if (v > cap){ v = cap; flashCap(c.key); }
-    if (v < 0) v = 0;
-    state.w[c.key] = v;
-    refresh();
-  }
-  sliders[c.key].addEventListener("input", function(){ setW(parseInt(this.value, 10)); });
-  stepBtns[c.key] = {};
-  Array.prototype.forEach.call(d.querySelectorAll(".step"), function(btn){
-    var dlt = parseInt(btn.dataset.d, 10), hold = null, rep = null;
-    stepBtns[c.key][dlt] = btn;
-    function once(){ setW(state.w[c.key] + dlt); if (btn.disabled) stop(); }
-    function stop(){ clearTimeout(hold); clearInterval(rep); hold = rep = null; }
-    /* clique simples soma 1; segurar repete */
-    btn.addEventListener("pointerdown", function(e){
-      if (e.button !== 0) return;
-      e.preventDefault(); once();
-      hold = setTimeout(function(){ rep = setInterval(once, 70); }, 400);
+var sliders = {}, valEls = {}, effEls = {}, modeBtns = {}, stepBtns = {}, onBoxes = {};
+ICONS.custom = SV+'<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>';
+function setW(k, v){
+  /* Trava: a soma dos pesos dos critérios em uso nunca passa de 100% */
+  var others = 0;
+  activeCrit().forEach(function(o){ if (o.key !== k) others += state.w[o.key]||0; });
+  var cap = 100 - others;
+  if (v > cap){ v = cap; flashCap(k); }
+  if (v < 0) v = 0;
+  state.w[k] = v;
+  refresh();
+}
+function buildWeights(){
+  wBox.innerHTML = ""; sliders = {}; valEls = {}; effEls = {}; modeBtns = {}; stepBtns = {}; onBoxes = {};
+  allCrit().forEach(function(c){
+    var d = document.createElement("div"); d.className = "w"+(c.custom ? " custom" : "");
+    var id = "w_"+c.key;
+    d.innerHTML =
+      '<div class="w-top"><span class="lab"><span class="ci" aria-hidden="true">'+(ICONS[c.key] || ICONS.custom)+'</span><label for="'+id+'">'+esc(c.label)+'</label></span><span class="val" id="'+id+'_v"></span></div>'+
+      '<div class="w-use"><label class="use"><input type="checkbox" class="crit-on" id="'+id+'_on" '+(isOn(c.key)?"checked":"")+'><span class="sw" aria-hidden="true"></span><span class="ut">Usar no cálculo</span></label>'+
+        (c.custom ? '<span class="ctag">'+(c.dir > 0 ? "maior valor, maior prioridade" : "maior valor, menor prioridade")+'</span><button type="button" class="del crit-del" data-k="'+c.key+'" aria-label="Excluir o critério '+esc(c.label)+'" title="Excluir critério">×</button>' : '')+'</div>'+
+      '<div class="srow"><button type="button" class="step" data-d="-1" aria-label="Diminuir '+esc(c.label)+' em 1 ponto">−</button>'+
+      '<div class="rwrap"><input type="range" id="'+id+'" min="0" max="100" step="1" aria-describedby="'+id+'_e">'+
+      '<div class="scale"><span>0%</span><span>50%</span><span>100%</span></div></div>'+
+      '<button type="button" class="step" data-d="1" aria-label="Aumentar '+esc(c.label)+' em 1 ponto">+</button></div>'+
+      '<div class="eff" id="'+id+'_e">Peso efetivo: <b>–</b></div>';
+    if (c.key === "gbm"){
+      d.innerHTML +=
+        '<div class="moderow"><div class="mode" role="group" aria-label="Modo do critério GBM">'+
+        '<button type="button" data-mode="bin">Binário (TCC)</button>'+
+        '<button type="button" data-mode="qtd">Quantidade</button></div>'+
+        '<span class="helpwrap"><button type="button" class="help lt" id="btnModeHelp" aria-label="Diferença entre Binário e Quantidade" aria-describedby="btnModeHelpTip">?</button>'+
+        '<span class="tip" role="tooltip" id="btnModeHelpTip"><b>Como o critério GBM é calculado</b>'+
+        '<span><b>Binário (TCC):</b> considera só se a RA tem ou não GBM. Sem GBM recebe nota 1; com um ou mais, nota 0. É o modo usado no TCC e o que corresponde aos pesos dados pelos especialistas.</span>'+
+        '<span><b>Quantidade:</b> a nota cai conforme o número de GBMs na RA, de 1 (nenhum) até 0 (a RA com mais GBMs). Diferencia RAs com 1, 2 ou 3 unidades, mas diminui a vantagem de quem não tem GBM: RAs com 1 GBM recebem 0,67 e sobem no ranking.</span>'+
+        '<span>Use Quantidade para explorar cenários; para decisões, prefira o Binário.</span></span></span></div>'+
+        '<div class="mode-hint" id="modeHint"></div>';
+    }
+    wBox.appendChild(d);
+    sliders[c.key] = d.querySelector("input[type=range]");
+    valEls[c.key] = d.querySelector(".val");
+    effEls[c.key] = d.querySelector(".eff b");
+    onBoxes[c.key] = d.querySelector(".crit-on");
+    onBoxes[c.key].addEventListener("change", function(){ toggleCrit(c.key, this.checked); });
+    sliders[c.key].addEventListener("input", function(){ setW(c.key, parseInt(this.value, 10)); });
+    stepBtns[c.key] = {};
+    Array.prototype.forEach.call(d.querySelectorAll(".step"), function(btn){
+      var dlt = parseInt(btn.dataset.d, 10), hold = null, rep = null;
+      stepBtns[c.key][dlt] = btn;
+      function once(){ setW(c.key, (state.w[c.key]||0) + dlt); if (btn.disabled) stop(); }
+      function stop(){ clearTimeout(hold); clearInterval(rep); hold = rep = null; }
+      /* clique simples soma 1; segurar repete */
+      btn.addEventListener("pointerdown", function(e){
+        if (e.button !== 0 || btn.disabled) return;
+        e.preventDefault(); once();
+        hold = setTimeout(function(){ rep = setInterval(once, 70); }, 400);
+      });
+      ["pointerup","pointerleave","pointercancel"].forEach(function(ev){ btn.addEventListener(ev, stop); });
+      btn.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); once(); } });
     });
-    ["pointerup","pointerleave","pointercancel"].forEach(function(ev){ btn.addEventListener(ev, stop); });
-    btn.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); once(); } });
+    var del = d.querySelector(".crit-del");
+    if (del){
+      var armT = null;
+      del.addEventListener("click", function(){
+        if (!del.classList.contains("armed")){
+          del.classList.add("armed"); del.textContent = "Excluir?"; armT = setTimeout(function(){ del.classList.remove("armed"); del.textContent = "×"; }, 3000); return;
+        }
+        clearTimeout(armT); removeCrit(c.key);
+      });
+    }
   });
-});
-Array.prototype.forEach.call(wBox.querySelectorAll(".mode button"), function(b){
-  modeBtns[b.dataset.mode] = b;
-  b.addEventListener("click", function(){ state.mode = b.dataset.mode; refresh(); });
+  Array.prototype.forEach.call(wBox.querySelectorAll(".mode button"), function(b){
+    modeBtns[b.dataset.mode] = b;
+    b.addEventListener("click", function(){ state.mode = b.dataset.mode; refresh(); });
+  });
+  if (state.custom.length < MAX_CUSTOM){
+    var add = document.createElement("button");
+    add.type = "button"; add.className = "w addcrit"; add.id = "btnAddCrit";
+    add.innerHTML = '<span class="plus" aria-hidden="true">+</span><b>Novo critério</b><span>Defina nome, peso e sentido; a coluna aparece na Matriz de dados</span>';
+    add.addEventListener("click", openCritModal);
+    wBox.appendChild(add);
+  }
+}
+function toggleCrit(k, on){
+  if (on){
+    delete state.on[k];
+    var others = 0; activeCrit().forEach(function(o){ if (o.key !== k) others += state.w[o.key]||0; });
+    if ((state.w[k]||0) > 100 - others){ state.w[k] = Math.max(0, 100 - others); flashCap(k); }
+  } else {
+    state.on[k] = false;
+  }
+  buildMatrix(); refresh();
+}
+function removeCrit(k){
+  state.custom = state.custom.filter(function(c){ return c.key !== k; });
+  delete state.w[k]; delete state.on[k];
+  state.rows.forEach(function(r){ delete r[k]; });
+  Object.keys(state.raw).forEach(function(rk){ if (rk.split("|")[1] === k) delete state.raw[rk]; });
+  buildWeights(); buildMatrix(); refresh();
+}
+
+/* ---------- Novo critério ---------- */
+var critModal = document.getElementById("critModal");
+function openCritModal(){
+  var free = 100 - activeSum();
+  document.getElementById("ncName").value = "";
+  var wIn = document.getElementById("ncW"); wIn.max = free; wIn.value = Math.min(10, free);
+  document.getElementById("ncFree").textContent = free+"%";
+  document.getElementById("ncWNote").textContent = free === 0
+    ? "A soma dos pesos já está em 100%. O critério será criado com 0%; reduza outro critério e aumente este depois."
+    : "Disponível para distribuir: "+free+"%. Para dar mais peso, reduza antes outro critério.";
+  document.querySelector('input[name="ncDir"][value="1"]').checked = true;
+  document.getElementById("ncErr").textContent = "";
+  lastFocus = document.activeElement; critModal.hidden = false; document.body.style.overflow = "hidden";
+  document.getElementById("ncName").focus();
+}
+function closeCritModal(){ critModal.hidden = true; document.body.style.overflow = ""; if (lastFocus) lastFocus.focus(); }
+["ncClose","ncCancel"].forEach(function(id){ document.getElementById(id).addEventListener("click", closeCritModal); });
+critModal.addEventListener("click", function(e){ if (e.target === critModal) closeCritModal(); });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !critModal.hidden) closeCritModal(); });
+document.getElementById("critForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  var name = document.getElementById("ncName").value.replace(/\s+/g, " ").trim();
+  var free = 100 - activeSum(), w = parseInt(document.getElementById("ncW").value, 10);
+  var err = document.getElementById("ncErr");
+  if (!name){ err.textContent = "Digite o nome do critério."; return; }
+  if (allCrit().some(function(c){ return normTxt(c.label) === normTxt(name); })){ err.textContent = "Já existe um critério com esse nome."; return; }
+  if (!isFinite(w) || w < 0){ err.textContent = "Informe um peso entre 0 e "+free+"%."; return; }
+  if (w > free){ err.textContent = "O peso máximo disponível agora é "+free+"%. Reduza outro critério para liberar mais."; return; }
+  var n = 1; while (state.custom.some(function(c){ return c.key === "c"+n; })) n++;
+  var key = "c"+n, dir = document.querySelector('input[name="ncDir"]:checked').value === "-1" ? -1 : 1;
+  state.custom.push({key:key, label:name, dir:dir});
+  state.w[key] = w;
+  state.rows.forEach(function(r){ r[key] = null; });
+  closeCritModal();
+  buildWeights(); buildMatrix(); refresh();
+  stEl.textContent = "Critério “"+name+"” criado: preencha a coluna na Matriz de dados"; stEl.className = "status ok";
 });
 
 /* ---------- Interface: matriz ---------- */
 var mBody = document.querySelector("#matrix tbody");
 var inputs = [], trs = [];
-var MCOLS = MCOLS_KEYS.map(function(k){ return critOf(k); });
 function paintPending(){ state.rows.forEach(function(r, i){ if (trs[i]){ var p = isPending(r); trs[i].classList.toggle("pending", p); trs[i].title = p ? "Aguardando dados: fora do cálculo" : ""; } }); }
 function buildMatrix(){
+  var MC = matrixCols();
+  document.getElementById("matrixHead").innerHTML = '<tr><th class="l sticky">Região Administrativa</th>'+MC.map(function(c){
+    var lab = c.key === "dist" ? "Distância ao GBM mais próximo (km)" : c.label;
+    return '<th class="'+(isOn(c.key) ? "" : "off")+(c.custom ? " cust" : "")+'">'+esc(lab)+(isOn(c.key) ? "" : '<small>fora do cálculo</small>')+'</th>';
+  }).join("")+'</tr>';
   mBody.innerHTML = ""; inputs = []; trs = [];
   state.rows.forEach(function(r, i){
     var tr = document.createElement("tr");
@@ -814,8 +975,9 @@ function buildMatrix(){
     if (NEW_RAS.indexOf(r.ra) >= 0){ var bd = document.createElement("span"); bd.className = "newra"; bd.textContent = "nova RA"; th.appendChild(bd); }
     tr.appendChild(th); trs.push(tr);
     var rowInputs = {};
-    MCOLS.forEach(function(c){
+    MC.forEach(function(c){
       var td = document.createElement("td");
+      if (!isOn(c.key)) td.className = "off";
       var inp = document.createElement("input");
       inp.type = "text"; inp.inputMode = c.intOnly ? "numeric" : "decimal"; inp.autocomplete = "off";
       inp.className = c.key === "gbm" ? "gbm" : "";
@@ -823,15 +985,18 @@ function buildMatrix(){
       inp.dataset.i = i; inp.dataset.k = c.key;
       var rawKey = i+"|"+c.key;
       inp.value = state.raw[rawKey] !== undefined ? state.raw[rawKey] : fmtCell(r[c.key], c);
+      inp.disabled = !isOn(c.key);
+      if (inp.disabled) inp.title = "Critério fora do cálculo: marque “Usar no cálculo” no card de pesos para editar";
       inp.addEventListener("input", onCellInput);
       inp.addEventListener("blur", onCellBlur);
+      inp.addEventListener("paste", onCellPaste);
       td.appendChild(inp); tr.appendChild(td); rowInputs[c.key] = inp;
     });
     inputs.push(rowInputs);
     mBody.appendChild(tr);
   });
 }
-function critOf(k){ for (var j=0;j<CRIT.length;j++) if (CRIT[j].key===k) return CRIT[j]; }
+function critOf(k){ var a = allCrit(); for (var j=0;j<a.length;j++) if (a[j].key===k) return a[j]; }
 function onCellInput(e){
   var inp = e.target, i = +inp.dataset.i, c = critOf(inp.dataset.k), key = i+"|"+c.key;
   var p = parseCell(inp.value, c);
@@ -839,14 +1004,32 @@ function onCellInput(e){
   else { state.rows[i][c.key] = null; state.raw[key] = inp.value; }
   refresh();
 }
+/* Colar uma coluna do Excel: preenche esta célula e as de baixo */
+function onCellPaste(e){
+  var txt = (e.clipboardData || window.clipboardData).getData("text");
+  if (!txt || !/[\r\n]/.test(txt.replace(/[\r\n]+$/, ""))) return;
+  e.preventDefault();
+  var inp = e.target, i0 = +inp.dataset.i, c = critOf(inp.dataset.k);
+  var lines = txt.replace(/[\r\n]+$/, "").split(/\r?\n/);
+  lines.forEach(function(l, n){
+    var i = i0 + n; if (i >= state.rows.length) return;
+    var v = l.split("\t")[0], key = i+"|"+c.key, p = parseCell(v, c);
+    if (p.ok){ state.rows[i][c.key] = p.v; delete state.raw[key]; } else { state.rows[i][c.key] = null; state.raw[key] = v; }
+    var el = inputs[i] && inputs[i][c.key];
+    if (el) el.value = p.ok ? fmtCell(p.v, c) : v;
+  });
+  refresh();
+  stEl.textContent = Math.min(lines.length, state.rows.length - i0)+" valores colados em “"+c.label+"”"; stEl.className = "status ok";
+}
 function onCellBlur(e){
   var inp = e.target, i = +inp.dataset.i, c = critOf(inp.dataset.k);
   if (state.raw[i+"|"+c.key] === undefined) inp.value = fmtCell(state.rows[i][c.key], c);
 }
 function paintCells(){
   inputs.forEach(function(ri, i){
-    CRIT.forEach(function(c){
-      var inp = ri[c.key], bad = state.raw[i+"|"+c.key] !== undefined, miss = !bad && state.rows[i][c.key] === null;
+    matrixCols().forEach(function(c){
+      var inp = ri[c.key]; if (!inp) return;
+      var bad = state.raw[i+"|"+c.key] !== undefined, miss = !bad && state.rows[i][c.key] === null;
       inp.classList.toggle("bad", bad); inp.classList.toggle("miss", miss);
       inp.setAttribute("aria-invalid", bad || miss ? "true" : "false");
       inp.title = bad ? (c.intOnly ? "Valor inválido: use número inteiro maior ou igual a zero" : "Valor inválido: use número maior ou igual a zero") : (miss ? "Valor ausente" : "");
@@ -861,21 +1044,25 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(ch){ return {"&":"
 
 function refresh(){
   /* pesos */
-  var sum = 0;
-  CRIT.forEach(function(c){ sliders[c.key].value = state.w[c.key]; valEls[c.key].textContent = state.w[c.key]+"%"; sum += state.w[c.key]; });
+  var sum = activeSum();
+  allCrit().forEach(function(c){
+    var on = isOn(c.key), card = sliders[c.key].closest(".w");
+    sliders[c.key].value = state.w[c.key]||0; valEls[c.key].textContent = (state.w[c.key]||0)+"%";
+    card.classList.toggle("off", !on); sliders[c.key].disabled = !on; onBoxes[c.key].checked = on;
+  });
   document.getElementById("wSum").textContent = sum+"%";
   document.getElementById("wFree").textContent = (100-sum)+"%";
   document.getElementById("wMeter").style.width = sum+"%";
   document.getElementById("wNote").textContent = (sum > 0 && sum < 100)
     ? "Com soma abaixo de 100%, os pesos são reescalados proporcionalmente no cálculo (ver peso efetivo)." : "";
-  CRIT.forEach(function(c){
-    var cap = 100 - (sum - state.w[c.key]);
-    stepBtns[c.key][-1].disabled = state.w[c.key] <= 0;
-    stepBtns[c.key][1].disabled = state.w[c.key] >= cap;
-    stepBtns[c.key][1].title = state.w[c.key] >= cap ? "Soma já está em 100%: reduza outro critério" : "";
+  allCrit().forEach(function(c){
+    var on = isOn(c.key), wv = state.w[c.key]||0, cap = 100 - (sum - (on ? wv : 0));
+    stepBtns[c.key][-1].disabled = !on || wv <= 0;
+    stepBtns[c.key][1].disabled = !on || wv >= cap;
+    stepBtns[c.key][1].title = on && wv >= cap ? "Soma já está em 100%: reduza outro critério" : "";
   });
   Object.keys(modeBtns).forEach(function(m){ modeBtns[m].setAttribute("aria-pressed", String(state.mode === m)); });
-  document.getElementById("modeHint").textContent = state.mode === "bin"
+  if (document.getElementById("modeHint")) document.getElementById("modeHint").textContent = state.mode === "bin"
     ? "Conta apenas se a RA tem ou não GBM (0 = sem GBM)."
     : "Cada GBM a mais reduz a contribuição do critério.";
 
@@ -894,17 +1081,21 @@ function refresh(){
     rAlert.innerHTML = msg;
     dAlert.innerHTML = '<div class="alert warn">Células destacadas precisam ser corrigidas. Valores ausentes não são tratados como zero.</div>';
     rBody.innerHTML = "";
-    CRIT.forEach(function(c){ effEls[c.key].textContent = "–"; });
+    allCrit().forEach(function(c){ effEls[c.key].textContent = isOn(c.key) ? "–" : "fora do cálculo"; });
   } else if (res.error === "few"){
     rAlert.innerHTML = '<div class="alert warn"><b>Ranking não calculado.</b> É preciso ao menos duas RAs com dados completos.</div>';
     rBody.innerHTML = "";
-    CRIT.forEach(function(c){ effEls[c.key].textContent = "–"; });
+    allCrit().forEach(function(c){ effEls[c.key].textContent = isOn(c.key) ? "–" : "fora do cálculo"; });
   } else if (res.error === "weights"){
-    rAlert.innerHTML = '<div class="alert err"><b>Todos os pesos estão em 0%.</b> Defina pelo menos um peso maior que zero para calcular o ranking ponderado.</div>';
+    rAlert.innerHTML = '<div class="alert err"><b>Todos os pesos em uso estão em 0%.</b> Defina pelo menos um peso maior que zero para calcular o ranking ponderado.</div>';
     rBody.innerHTML = "";
-    CRIT.forEach(function(c){ effEls[c.key].textContent = "–"; });
+    allCrit().forEach(function(c){ effEls[c.key].textContent = isOn(c.key) ? "–" : "fora do cálculo"; });
+  } else if (res.error === "nocrit"){
+    rAlert.innerHTML = '<div class="alert err"><b>Nenhum critério em uso.</b> Marque “Usar no cálculo” em pelo menos um critério do quadro de pesos.</div>';
+    rBody.innerHTML = "";
+    allCrit().forEach(function(c){ effEls[c.key].textContent = "fora do cálculo"; });
   } else {
-    CRIT.forEach(function(c){ effEls[c.key].textContent = nf(100*res.eff[c.key], 2)+"%"; });
+    allCrit().forEach(function(c){ effEls[c.key].textContent = isOn(c.key) ? nf(100*res.eff[c.key], 2)+"%" : "fora do cálculo"; });
     var d = decimalsFor(res.ranking);
     var maxIp = Math.max(res.ranking[0].ip, 1e-9);
     var html = "";
@@ -1099,9 +1290,28 @@ function round100(w){
      .slice(0, rest).forEach(function(o){ fl[o.i]++; });
   return fl;
 }
-function ahpRounded(){ var g = groupAhp(); if (!g) return null; var r = round100(g.w), o = {}; AO.forEach(function(k,i){ o[k] = r[i]; }); return o; }
-function ahpApplied(){ var r = ahpRounded(); return !!r && AO.every(function(k){ return state.w[k] === r[k]; }); }
-function applyAhp(){ var r = ahpRounded(); if (r) state.w = r; refresh(); }
+/* Arredonda proporções para inteiros que somam "total" (maiores restos) */
+function roundTo(w, total){
+  var raw = w.map(function(x){ return total*x; }), fl = raw.map(Math.floor);
+  var rest = total - fl.reduce(function(a,b){ return a+b; },0);
+  raw.map(function(x,i){ return {i:i, r:x - fl[i]}; }).sort(function(a,b){ return b.r - a.r; })
+     .slice(0, rest).forEach(function(o){ fl[o.i]++; });
+  return fl;
+}
+/* Pesos do AHP para os critérios do TCC que estão em uso. Os critérios criados no
+   painel mantêm o peso definido; o AHP ocupa o restante até 100%. */
+function ahpRounded(){
+  var g = groupAhp(); if (!g) return null;
+  var keys = AO.filter(isOn); if (!keys.length) return null;
+  var custom = state.custom.filter(function(c){ return isOn(c.key); }).reduce(function(t,c){ return t + (state.w[c.key]||0); }, 0);
+  var avail = Math.max(0, 100 - custom);
+  var ws = keys.map(function(k){ return g.w[AO.indexOf(k)]; }), tot = ws.reduce(function(a,b){ return a+b; }, 0);
+  var r = roundTo(ws.map(function(x){ return x/tot; }), avail), o = {};
+  keys.forEach(function(k, i){ o[k] = r[i]; });
+  return o;
+}
+function ahpApplied(){ var r = ahpRounded(); return !!r && Object.keys(r).every(function(k){ return state.w[k] === r[k]; }); }
+function applyAhp(){ var r = ahpRounded(); if (r) Object.keys(r).forEach(function(k){ state.w[k] = r[k]; }); refresh(); }
 function pct(x, d){ return nf(100*x, d === undefined ? 2 : d)+"%"; }
 function tsFmt(ts){ if (!ts) return "sem data"; var m = ts.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/); return m ? m[3]+"/"+m[2]+"/"+m[1]+" "+m[4]+":"+m[5] : ts; }
 function relabel(){ state.experts.forEach(function(e, i){ e.label = "Especialista "+(BASE_OBJ.length+i+1); }); }
@@ -1369,7 +1579,7 @@ document.getElementById("impOk").addEventListener("click", function(){
 var stEl = document.getElementById("saveStatus"), stTimer = null;
 function save(){
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify({rows:state.rows, raw:state.raw, w:state.w, mode:state.mode, experts:state.experts, baseOn:state.baseOn}));
+    localStorage.setItem(STORE_KEY, JSON.stringify({rows:state.rows, raw:state.raw, w:state.w, mode:state.mode, experts:state.experts, baseOn:state.baseOn, on:state.on, custom:state.custom}));
     stEl.textContent = "Alterações salvas neste navegador"; stEl.className = "status ok";
   } catch(e){
     stEl.textContent = "Salvamento local indisponível neste modo de abertura"; stEl.className = "status";
@@ -1387,15 +1597,27 @@ function load(){
     if (s.rows.length !== INITIAL.length) return;
     var okNames = s.rows.every(function(r, i){ return r && r.ra === INITIAL[i][0]; });
     if (!okNames) return;
+    if (Array.isArray(s.custom)){
+      var seen = {};
+      state.custom = s.custom.filter(function(c){
+        var ok = c && /^c\d{1,2}$/.test(c.key) && !seen[c.key] && typeof c.label === "string" && c.label.trim() && c.label.length <= 60 && (c.dir === 1 || c.dir === -1);
+        if (ok) seen[c.key] = true; return ok;
+      }).slice(0, MAX_CUSTOM).map(function(c){ return {key:c.key, label:c.label.trim(), dir:c.dir}; });
+    }
+    if (s.on && typeof s.on === "object"){
+      allCrit().forEach(function(c){ if (s.on[c.key] === false) state.on[c.key] = false; });
+    }
     state.rows = s.rows.map(function(r){
       var o = {ra:r.ra};
-      CRIT.forEach(function(c){ var v = r[c.key]; o[c.key] = (typeof v === "number" && isFinite(v) && v >= 0) ? v : null; });
+      allCrit().forEach(function(c){ var v = r[c.key]; o[c.key] = (typeof v === "number" && isFinite(v) && v >= 0) ? v : null; });
       return o;
     });
     state.raw = (s.raw && typeof s.raw === "object") ? s.raw : {};
-    var okW = s.w && CRIT.every(function(c){ var v = s.w[c.key]; return typeof v === "number" && v >= 0 && v <= 100 && Math.round(v) === v; });
-    if (okW && CRIT.reduce(function(t,c){ return t + s.w[c.key]; }, 0) <= 100){
-      CRIT.forEach(function(c){ state.w[c.key] = s.w[c.key]; });
+    var okW = s.w && allCrit().every(function(c){ var v = s.w[c.key]; return typeof v === "number" && v >= 0 && v <= 100 && Math.round(v) === v; });
+    if (okW && activeCrit().reduce(function(t,c){ return t + s.w[c.key]; }, 0) <= 100){
+      allCrit().forEach(function(c){ state.w[c.key] = s.w[c.key]; });
+    } else {
+      state.custom.forEach(function(c){ state.w[c.key] = 0; });
     }
     if (s.mode === "bin" || s.mode === "qtd") state.mode = s.mode;
     if (Array.isArray(s.experts)){
@@ -1470,9 +1692,10 @@ function csvLine(cells){ return cells.map(function(x){ x = String(x); return /[;
 function dec(v){ return String(v).replace(".", ","); }
 
 function exportMatrixCSV(){
-  var lines = [csvLine(["Regiao Administrativa","Atendimentos","Populacao","GBMs multiemprego na RA","Distancia ao GBM mais proximo (km)"])];
+  var MC = matrixCols();
+  var lines = [csvLine(["Regiao Administrativa"].concat(MC.map(function(c){ return (c.key === "dist" ? "Distancia ao GBM mais proximo (km)" : c.label)+(isOn(c.key) ? "" : " (fora do calculo)"); })))];
   state.rows.forEach(function(r, i){
-    lines.push(csvLine([r.ra].concat(MCOLS.map(function(c){
+    lines.push(csvLine([r.ra].concat(MC.map(function(c){
       if (state.raw[i+"|"+c.key] !== undefined) return "INVALIDO";
       var v = r[c.key]; return v === null ? "" : dec(v);
     }))));
@@ -1482,13 +1705,14 @@ function exportMatrixCSV(){
 function exportRankingCSV(){
   if (!needRanking()) return;
   var byRa = {}; state.rows.forEach(function(r){ byRa[r.ra] = r; });
-  var lines = [csvLine(["Posicao","Regiao Administrativa","Indice de prioridade","Faixa de prioridade","Atendimentos","Populacao","GBMs multiemprego","Distancia (km)","Posicao de referencia (TCC)"])];
+  var MC = matrixCols();
+  var lines = [csvLine(["Posicao","Regiao Administrativa","Indice de prioridade","Faixa de prioridade"].concat(MC.map(function(c){ return c.key === "dist" ? "Distancia (km)" : c.label; })).concat(["Posicao de referencia (TCC)"]))];
   lastRes.ranking.forEach(function(o){
     var r = byRa[o.ra];
-    lines.push(csvLine([o.pos, o.ra, dec(o.ip.toFixed(4)), BANDS[bandOf(o.pos)].n, dec(r.atend), dec(r.pop), r.gbm, dec(r.dist), REF_POS[o.ra]]));
+    lines.push(csvLine([o.pos, o.ra, dec(o.ip.toFixed(4)), BANDS[bandOf(o.pos)].n].concat(MC.map(function(c){ var v = r[c.key]; return v === null || v === undefined ? "" : dec(v); })).concat([REF_POS[o.ra] || "nova"])));
   });
   lines.push("");
-  lines.push(csvLine(["Pesos selecionados (%)", "Atendimentos "+state.w.atend, "GBMs "+state.w.gbm, "Populacao "+state.w.pop, "Distancia "+state.w.dist]));
+  lines.push(csvLine(["Pesos selecionados (%)"].concat(allCrit().map(function(c){ return c.label+" "+(isOn(c.key) ? (state.w[c.key]||0) : "fora do calculo"); }))));
   lines.push(csvLine(["Criterio GBM", modeTxt()]));
   lines.push(csvLine(["Gerado em", stamp().txt]));
   download(new Blob(["﻿"+lines.join("\r\n")], {type:"text/csv;charset=utf-8"}), "ranking_priorizacao_gbms_"+stamp().file+".csv");
@@ -1691,14 +1915,15 @@ function reportPDF(){
   g.fillStyle = RP.ink; var tl = wrap("Ranking de prioridade das Regiões Administrativas do Distrito Federal para implantação de novos Grupamentos de Bombeiro Militar", "700 16px "+F, CW);
   tl.forEach(function(l){ g.font = "700 16px "+F; g.fillStyle = RP.ink; g.fillText(l, RP.M, y+16); y += 21; });
   y += 4;
-  para("Relatório gerado pelo painel de priorização com os dados, os pesos e o critério GBM vigentes no momento da exportação. O índice de prioridade (0 a 100) resulta da soma ponderada dos quatro critérios normalizados pelo método Min-Max, com pesos obtidos pelo Processo Analítico Hierárquico (AHP).", 8.5, RP.ink2, "400", 10);
+  para("Relatório gerado pelo painel de priorização com os dados, os pesos e o critério GBM vigentes no momento da exportação. O índice de prioridade (0 a 100) resulta da soma ponderada dos critérios em uso, normalizados pelo método Min-Max, com pesos obtidos pelo Processo Analítico Hierárquico (AHP).", 8.5, RP.ink2, "400", 10);
 
   section(1, "Parâmetros do cenário");
   var ahpTxt = gAhp ? "Pesos do AHP (grupo): "+ex.length+" respostas de especialistas no cálculo, razão de consistência "+nf(gAhp.cr,3)+"." : "Nenhuma resposta do AHP selecionada.";
   table("Quadro 1 – Pesos dos critérios", [
       {t:"Critério", w:46}, {t:"Peso selecionado", w:18, a:"r", mono:true}, {t:"Peso efetivo no cálculo", w:20, a:"r", mono:true}, {t:"Peso do AHP (grupo)", w:18, a:"r", mono:true}],
-    CRIT.map(function(c){ var ai = AO.indexOf(c.key);
-      return {cells:[c.label, state.w[c.key]+"%", nf(100*lastRes.eff[c.key],2)+"%", gAhp ? nf(100*gAhp.w[ai],2)+"%" : "–"]}; }),
+    allCrit().map(function(c){ var ai = AO.indexOf(c.key), on = isOn(c.key);
+      return {cells:[c.label+(c.custom ? " (criado no painel)" : "")+(on ? "" : " (fora do cálculo)"), (state.w[c.key]||0)+"%", on ? nf(100*lastRes.eff[c.key],2)+"%" : "–", (gAhp && ai >= 0) ? nf(100*gAhp.w[ai],2)+"%" : "–"],
+              colors: on ? null : [RP.ink3, RP.ink3, RP.ink3, RP.ink3]}; }),
     {note:["Critério GBM: "+modeTxt()+". "+ahpTxt+" "+(ahpApplied() ? "Os pesos selecionados correspondem aos do AHP, arredondados a inteiros." : "Os pesos selecionados foram ajustados manualmente a partir do AHP.")]});
 
   section(2, "Ranking de prioridade");
@@ -1714,12 +1939,12 @@ function reportPDF(){
     {note:[FONTE, "Nota: índice de 0 a 100. * Variação de posição frente ao cenário de referência do TCC (dados e pesos iniciais, critério GBM binário)."+(lastRes.pending.length ? " RAs aguardando dados, fora do cálculo: "+lastRes.pending.map(function(r){ return r.ra; }).join(", ")+"." : "")]});
 
   section(3, "Matriz de dados");
-  table("Quadro 3 – Dados por Região Administrativa", [
-      {t:"Região Administrativa", w:34}, {t:"Atendimentos", w:15, a:"r", mono:true}, {t:"População", w:16, a:"r", mono:true},
-      {t:"GBMs multiemprego na RA", w:16, a:"r", mono:true}, {t:"Distância ao GBM mais próximo (km)", w:19, a:"r", mono:true}],
+  var MCr = matrixCols(), wRA = MCr.length > 4 ? 26 : 34, wC = (100 - wRA)/MCr.length;
+  table("Quadro 3 – Dados por Região Administrativa", [{t:"Região Administrativa", w:wRA}].concat(MCr.map(function(c){
+      return {t:(c.key === "dist" ? "Distância ao GBM mais próximo (km)" : c.label)+(isOn(c.key) ? "" : " (fora do cálculo)"), w:wC, a:"r", mono:true}; })),
     state.rows.map(function(r){ var p = isPending(r);
-      return {cells:[r.ra+(p ? " (aguardando dados)" : ""), fmtCell(r.atend, CRIT[0]), fmtCell(r.pop, critOf("pop")), r.gbm === null ? "" : r.gbm, fmtCell(r.dist, critOf("dist"))],
-              colors: p ? [RP.ink3, RP.ink3, RP.ink3, RP.ink3, RP.ink3] : null}; }),
+      return {cells:[r.ra+(p ? " (aguardando dados)" : "")].concat(MCr.map(function(c){ var v = r[c.key]; return v === null || v === undefined ? "" : fmtCell(v, c); })),
+              colors: p ? MCr.concat([0]).map(function(){ return RP.ink3; }) : null}; }),
     {note:["Fonte: atendimentos de 2025 (GESINT/CBMDF); população (PDAD 2024/IPEDF); quantidade de GBMs multiemprego (Matriz Operacional, BG nº 023/2026); distância viária do centroide ponderado pela densidade populacional ao GBM mais próximo (QGIS)."]});
 
   section(4, "Validação frente ao Plano de Obras 2025-2030");
@@ -1766,7 +1991,9 @@ function rankingCanvas(){
   g.fillStyle = "#fff"; g.font = "600 17px "+F; g.fillText("Ranking de prioridade das RAs para implantação de GBMs", 24, 47);
   var st = stamp();
   g.fillStyle = "#585e65"; g.font = "12px "+F;
-  g.fillText("Pesos efetivos: Atendimentos "+nf(100*lastRes.eff.atend,2)+"% · População "+nf(100*lastRes.eff.pop,2)+"% · GBMs "+nf(100*lastRes.eff.gbm,2)+"% · Distância "+nf(100*lastRes.eff.dist,2)+"%", 24, 96);
+  var wl = "Pesos efetivos: "+activeCrit().map(function(c){ return (c.key === "gbm" ? "GBMs" : c.key === "dist" ? "Distância" : c.label)+" "+nf(100*lastRes.eff[c.key],2)+"%"; }).join(" · ");
+  g.font = "12px "+F; while (g.measureText(wl).width > W-48 && g.font.indexOf("10px") < 0) g.font = (parseFloat(g.font)-0.5)+"px "+F;
+  g.fillText(wl, 24, 96); g.font = "12px "+F;
   g.fillText("Critério GBM: "+modeTxt()+" · Gerado em "+st.txt, 24, 114);
   /* legenda */
   var lx = 24; BANDS.forEach(function(b, i){
@@ -1829,7 +2056,7 @@ resetBtn.addEventListener("click", function(){
   disarm();
   state = fresh();
   try { localStorage.removeItem(STORE_KEY); } catch(e){}
-  buildMatrix(); refresh();
+  buildWeights(); buildMatrix(); refresh();
 });
 function disarm(){ clearTimeout(armTimer); resetBtn.classList.remove("danger-armed"); resetBtn.textContent = "Restaurar dados e pesos iniciais"; }
 
@@ -1853,6 +2080,7 @@ window.addEventListener("afterprint", function(){ if (wasDark) document.document
 
 /* ---------- Início ---------- */
 load();
+buildWeights();
 buildMatrix();
 refresh();
 window.__dash = {compute:compute, state:function(){ return state; }};
